@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="favicon.ico">
+    <title>Quality of This Data</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap theme -->
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+    <!-- Custom styles for this template -->
+    <link href="css/theme.css" rel="stylesheet">
+  </head>
+
+  <body role="document">
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/">Home</a></li>
+            <li><a href="about">About This Data Set</a></li>
+	    <li  class="active"><a href="quality">Data Quality</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container theme-showcase" role="main">
+
+      <!-- Main jumbotron for a primary marketing message or call to action -->
+      <div class="jumbotron">
+	<h1>Quality: About This Data Set</h1>
+      </div>
+
+    
+      <div class="page-header">
+	<h2>Is the data complete?</h2>
+	<p>The data is complete for answering the questions proposed in this byte. It has the information from all the characters mentioned in the book along with their allegiance, gender, introduction and death in the book.
+
+  If we wanted to answer information about the most important characters in the book, we would need the text and find the frequency of words to create an informal network of the series. In other words, the granularity is not the best for performing that kind of analysis, but it serves the purpose of this byte.</p>
+      </div>
+      
+      <div class="page-header">
+	<h2>Is the data coherent?</h2>
+	<p>There are several things I checked to confirm that the data is coherent:
+  <ul> 
+      <li> The introduction book and chapter was before the death book and chapter.</li>
+      <li> The death year makes sense compared to the book of death.</li>
+  </ul>
+      After looking at this, we confirmed that the data is coherent and we can use it for analysis.
+
+  </p>
+      </div>
+
+      <div class="page-header">
+	<h2>Is the data correct?</h2>
+	<p>There are several things I looked at to confirm that the data was correct:
+  <ul>
+      <li> The last names of the characters corresponded to their reported allegiance.</li>
+      <li> The introduction and death of the principal characters are where they're supposed to.</li>
+      <li> Randomly selected some characters and confirmed that the gender was correct.</li>
+      </ul>
+
+      After this, I could confirm that the data appears to be sound and that it could be used for the analysis.
+
+      </p>
+      </div>
+
+       <div class="page-header">
+  <h2>Is the data accountable?</h2>
+    <p> The data has been reviewed by a community of Game of Thrones fans and was curated to represent accountable information about the series.
+
+    Because several people with knowledge of the series have corrected and verified this information, it can be said that the data is accountable.
+  </p>
+      </div>
+
+    </div> <!-- /container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="js/jquery-1.11.3.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/docs.min.js"></script>
+  </body>
+</html>

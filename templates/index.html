@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="favicon.ico">
+    <title>All men must die - GOT (jdiner)</title>
+    
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap theme -->
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+    <!-- Custom styles for this project -->
+    <link href="css/explore.css" rel="stylesheet">
+  </head>
+  
+  <body role="document">
+    
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container" >
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="about">About This Data Set</a></li>
+	    <li><a href="quality">Data Quality</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+    
+    <div class="container theme-showcase" role="main">
+      
+      <!-- Main jumbotron for a primary marketing message or call to action -->
+      <div class="jumbotron">
+	<h1>Game of Thrones Characters Death Analysis</h1>
+        <p>One of the main themes surrounding Game of Thrones is death. There are no rules in the seven kingdoms and anyone can die at any moment or, as the show says, "Valar Morghulis" ("All men must die").</p>
+
+        <p>Taking this into consideration we want to know, based on the data of all the characters on the show, which group is more likely to die and what is the life expectancy in Westeros.</p>
+
+        <p>NOTE: The analysis is based on the book series, NOT the TV series.</p>
+      </div>
+      
+
+      <h2> Original Dataset</h2>
+      <p> The first 10 rows of the dataset are shown below. </p>
+
+      <div class="page-header">
+	
+      </div> <!-- /page-header -->
+    
+    
+    
+    <div class="table-responsive">
+	  <table class="table table-striped table-hover">
+	    <thead class="thead-inverse">
+	     <tr> 
+	{% for item in headers %}
+	         <th>{{ item }}</th>
+	{% endfor %}
+	     </tr>
+	    </thead>
+	    <tbody>
+	{% for row in content %}
+	     <tr>
+	  {% for datum in row %}
+	            <td>{{ datum }} </td>
+	  {% endfor %}
+	     </tr>
+	{% endfor %}
+	    </tbody>
+	   </table>
+	</div> 
+
+			<div>
+			<h2>
+				Analysis per Allegiance
+			</h2>
+			<p>
+				There are 11 houses in the Game of Thrones universe, each one with their own characteristics and political interests. There is another category called 'None' that corresponds to characters that don't have an allegiance to any of the houses. The purpose of this analysis is to see if some houses have suffered more casualties than others based on the total number of casualties.
+
+				The following graph shows how many characters are on each house and how many have died during the series.
+
+			</p>
+
+			<div class="image123">
+				<center><img alt="Allegiance Analysis" src="../plots/DeathsAllegiance.png"></center>
+			</div>
+
+
+
+			<p>
+
+				We can see from the plot that the number of deaths per house follows the same order as the number of characters from that house, so there is on case of a house with extremely disproportionate number of casualties.
+
+				Another interesting result that we see is that the houses that have the least number of characters are also the ones with the lowest proportion of casualties. This could be interpreted as George R.R Martin trying to preserve sufficient number of characters from a particular house, or maybe a hypothetical minimum for storytelling.
+			</p>
+
+			<h2>
+				Analysis per Gender
+			</h2>
+			<p>
+				There is significantly more men than women in the Game of Thrones universe, with 760 males and 157 females in total. The first analysis we want to do is see if there are proportional number of deaths between men and women or, to put it in other words, if a character is more likely to die because of its gender. 
+
+				The following graphs show how many characters are per gender, as well as the proportion of characters that have died between genders.
+			</p>
+
+				<div class="col-md-6">
+					<center><img class = "left" alt="Bootstrap Image Preview" src="../plots/GeneralGender.png" /></center>
+				</div>
+				<div class="col-md-6">
+					<center><img class = "right" alt="Bootstrap Image Preview" src="../plots/DeathProbability.png" /></center>
+				</div>
+
+			<p>
+				We can see from the plot that not only are men more in the number of total characters, but also in the number of casualties. Proportionally, men are more likely to die than women; with a probability of 35% compared to 23% for women. This difference is statistically significant so we can conclude that, in the Game of Thrones series, men are more likely to die than women.
+
+				Another characteristic of Game of Thrones is the number of battles that take place where, mostly, men die. Therefore, we want to compare if there is a difference between the number of deaths between men and women based on the house they're in.
+
+				The following graphs show the survival probability of male and females based on the house of allegiance.
+
+
+				<div class="col-md-6">
+					<center><img alt="Female Probability" src="../plots/ProbAllegianceFemale.png" /></center>
+				</div>
+				<div class="col-md-6">
+					<center><img alt="Male Probability" src="../plots/ProbAllegianceMale.png" /></center>
+				</div>
+
+				The first thing we notice from the graphs is that, because the Night's Watch consist of only men, there are no female casualties. Second, that there are no female casualties from the Greyjoy, Martell, and Tyrell houses; while men from the Martell and Tyrell allegiances are the ones with most likelyhood of survival (with about 1 dead out of 10), and the Greyjoy males fall to the 7th place with about 1 casualty for every 4 members.
+
+				It is consistent that the house with the least likelyhood of survival is the Wildlings, with about 3 out of 5 women dying, and about half of the men. We can see that 80% of the Stark women survived (compared to only around 50% men), and 50% of the Lannister women compared to 70% of the men.
+
+				We can conclude from this data that the group most likely to survive are women from the Greyjoy, Martell, and Tyrell houses; and the group that is most likely to die in the books are female Wildlings.
+				</p>
+
+			<h2>
+			Westeros' Life Expectancy
+			</h2>
+			<p>
+				We want to see how long does a character last in the book after being introduced by George R.R. Martin. We measure life expectancy as the difference in Chapters between their introductions and decease. In case the character is still alive, the last chapter of the book was used as their last chapter to see how long have they been alive.
+
+				The following graph provide the distribution of Life Expectancy by Allegiances.
+
+
+
+
+
+			</p>
+
+				<div class="image123">
+					<center><img alt="Life Expectancy" src="../plots/ChaptersAlive.png" /></center>
+				</div>
+
+				<p>We can see that the houses with the highest median Life Expectancy are the Lannister, Tully, and Tyrell. While the ones with lowest median Life Expectancy are the Wildlings, Targaryen and Greyjoy.
+
+				We can conclude from here that the life expectancy depends on the house of allegiance. With the median life expectancy of all Westeros being at 126 episodes.
+
+			</p>
+			</div>
+			</div> <!-- /container -->
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="js/jquery-1.11.3.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script>
+	function updateTable(str) {
+		console.log("in updateTable");
+		console.log(str);
+
+	    // error checking: ignore buttons that don't have a title!
+		if (str == "") {
+			return;
+		}
+
+				   
+				   
+</script>
+</body>
+</html>
