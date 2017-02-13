@@ -17,8 +17,9 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 from flask import Flask, request
 app = Flask(__name__)
 
-_INSTANCE_NAME = 'mobile-data'
+_INSTANCE_NAME = 'jdiner-mobile-byte3:mobile-data'
 _DB_NAME = 'mobile_data_db' # or whatever name you choose
+_USER = 'root'
 
 if (os.getenv('SERVER_SOFTWARE') and
     os.getenv('SERVER_SOFTWARE').startswith('Google App Engine/')):
