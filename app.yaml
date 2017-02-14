@@ -6,17 +6,12 @@
 # TODO: Enter your application id below. If you have signed up
 # using cloud.google.com/console use the "project id" for your application
 # id.
-#application: jdiner-explore
-#version: 1
 runtime: python27
 api_version: 1
 threadsafe: yes
 
 # Handlers define how to route requests to your application.
 handlers:
-- url: /favicon\.ico
-  static_files: favicon.ico
-  upload: favicon\.ico
 - url: /js
   static_dir: js
   application_readable: true
@@ -52,4 +47,4 @@ libraries:
 -  name: ssl
    version: latest
 -  name: MySQLdb
-   version: "latest"
+   version: latest
