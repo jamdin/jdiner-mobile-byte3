@@ -18,15 +18,34 @@ from flask import Flask, request
 app = Flask(__name__)
 
 _INSTANCE_NAME = 'jdiner-mobile-byte3:mobile-data'
-_DB_NAME = 'mobile_data_db' # or whatever name you choose
+_DB_NAME = 'mobile_data_db'
 _USER = 'root'
+_IPADDRESS = '173.194.232.250'
+_PSWD = '1234'
+_ACTIVITY = 'plugin_google_activity_recognition'
+_ID = 'ab755be6-a980-4d95-a229-6d2af7c35bbf'
 
 if (os.getenv('SERVER_SOFTWARE') and
     os.getenv('SERVER_SOFTWARE').startswith('Google App Engine/')):
-    _DB = MySQLdb.connect(unix_socket='/cloudsql/' + _INSTANCE_NAME, db=_DB_NAME, user=_USER, charset='utf8')
+    _DB = MySQLdb.connect(unix_socket='/cloudsql/' + _INSTANCE_NAME, db=_DB_NAME, user=_USER, passwd = _PSWD, charset='utf8')
 else:
-    _DB = MySQLdb.connect(host='127.0.0.1', port=3306, db=_DB_NAME, user=_USER, charset='utf8')
+    _DB = MySQLdb.connect(host=_IPADDRESS, port=3306, db=_DB_NAME, user=_USER, passwd = _PSWD, charset='utf8')
 
+# turns a unix timestamp into Year-month-day format
+day = "FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d')"
+# turns a unix timestamp into Hour:minute format
+time_of_day = "FROM_UNIXTIME(timestamp/1000,'%H:%i')"
+# calculates the difference between two timestamps in seconds
+elapsed_seconds = "(max(timestamp)-min(timestamp))/1000"
+# the name of the table our query should run on
+table = _ACTIVITY
+# turns a unix timestamp into Year-month-day Hour:minute format
+day_and_time_of_day = "FROM_UNIXTIME(timestamp/100, '%Y-%m-%d %H:%i')"
+# Groups the rows of a table by day and activity (so there will be one 
+# group of rows for each activity that occurred each day.  
+# For each group of rows, the day, time of day, activity name, and 
+# elapsed seconds (difference between maximum and minimum) is calculated, 
+query = "SELECT {0} AS day, {1} AS time_of_day, activity_name, {2} AS time_elapsed_seconds FROM {3} WHERE device_id='{4}'  GROUP BY day, activity_name, {5}".format(day, time_of_day, elapsed_seconds, table, _ID, day_and_time_of_day)
 
 @app.route('/')
 def index():
@@ -36,8 +55,13 @@ def index():
     cursor.execute('SHOW TABLES')
     
     logging.info(cursor.fetchall())
-
-    return template.render()
+    
+    cursor.execute(query)
+    result = cursor.fetchall()
+    logging.info(result)
+    queries = [{'query':query, 'results':result}]
+    context = {'queries':queries}
+    return template.render(context)
 
 # @app.route('/_update_table', methods=['POST']) 
 # def update_table():
