@@ -30,14 +30,10 @@ if (os.getenv('SERVER_SOFTWARE') and
     _DB = MySQLdb.connect(unix_socket='/cloudsql/' + _INSTANCE_NAME, db=_DB_NAME, user=_USER, passwd = _PSWD, charset='utf8')
 else:
 <<<<<<< HEAD
-<<<<<<< HEAD
     _DB = MySQLdb.connect(host=_IPADDRESS, port=3306, db=_DB_NAME, user=_USER, passwd = _PSWD, charset='utf8')
 =======
     _DB = MySQLdb.connect(host='173.194.232.250', port=3306, db=_DB_NAME, user=_USER, password = '1234', charset='utf8')
 >>>>>>> 808dc00069ed95c744b093fd348b30831dc1ea8b
-=======
-    _DB = MySQLdb.connect(host=_IPADDRESS, port=3306, db=_DB_NAME, user=_USER, passwd = _PSWD, charset='utf8')
->>>>>>> 88512f2e981beec25c89f1f657ae01142d6d90da
 
 # turns a unix timestamp into Year-month-day format
 day = "FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d')"
