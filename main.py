@@ -25,7 +25,7 @@ if (os.getenv('SERVER_SOFTWARE') and
     os.getenv('SERVER_SOFTWARE').startswith('Google App Engine/')):
     _DB = MySQLdb.connect(unix_socket='/cloudsql/' + _INSTANCE_NAME, db=_DB_NAME, user=_USER, charset='utf8')
 else:
-    _DB = MySQLdb.connect(host='127.0.0.1', port=3306, db=_DB_NAME, user=_USER, charset='utf8')
+    _DB = MySQLdb.connect(host='173.194.232.250', port=3306, db=_DB_NAME, user=_USER, password = '1234', charset='utf8')
 
 
 @app.route('/')
