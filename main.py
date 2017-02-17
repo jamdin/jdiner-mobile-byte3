@@ -96,7 +96,7 @@ def index():
     cursor.execute(query)
     result = cursor.fetchall()
     logging.info(result)
-    queries = [{'query':query, 'results':plot_toHome}]
+    queries = [{'query':query, 'results':result}]
     context = {'queries':queries}
     return template.render(context)
 
