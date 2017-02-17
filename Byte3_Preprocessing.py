@@ -1,22 +1,9 @@
-# Imports
-import os
-import jinja2
-import webapp2
-import logging
-import json
-import urllib
-import MySQLdb
 import pandas as pd
-
-
-JINJA_ENVIRONMENT = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
-    extensions=['jinja2.ext.autoescape'],
-    autoescape=True)
-
-# Import the Flask Framework
-from flask import Flask, request
-app = Flask(__name__)
+import MySQLdb
+import math
+import numpy as np
+import logging
+# from geopy.geocoders import Nominatim
 
 _INSTANCE_NAME = 'jdiner-mobile-byte3:mobile-data'
 _DB_NAME = 'mobile_data_db'
@@ -30,106 +17,11 @@ _EPSILON = 0.0001
 _HOME = '5440 5th Ave, Pittsburgh, PA  15232, United States'
 _UNIVERSITY = 'Carnegie Mellon University, 4902 Forbes Ave, Pittsburgh, PA  15213, United States'
 
-if (os.getenv('SERVER_SOFTWARE') and
-    os.getenv('SERVER_SOFTWARE').startswith('Google App Engine/')):
-    _DB = MySQLdb.connect(unix_socket='/cloudsql/' + _INSTANCE_NAME, db=_DB_NAME, user=_USER, passwd = _PSWD, charset='utf8')
-else:
-    _DB = MySQLdb.connect(host=_IPADDRESS, port=3306, db=_DB_NAME, user=_USER, passwd = _PSWD, charset='utf8')
+_DB = MySQLdb.connect(host=_IPADDRESS, port=3306, db=_DB_NAME, user=_USER, passwd = _PSWD, charset='utf8')
+cursor = _DB.cursor()
+print("connected")
+# geolocator = Nominatim()
 
-# # turns a unix timestamp into Year-month-day format
-# day = "FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d')"
-# # turns a unix timestamp into Hour:minute format
-# time_of_day = "FROM_UNIXTIME(timestamp/1000,'%H:%i')"
-# # calculates the difference between two timestamps in seconds
-# elapsed_seconds = "(max(timestamp)-min(timestamp))/1000"
-# # the name of the table our query should run on
-# table = _ACTIVITY
-# # turns a unix timestamp into Year-month-day Hour:minute format
-# day_and_time_of_day = "FROM_UNIXTIME(timestamp/100, '%Y-%m-%d %H:%i')"
-# # Groups the rows of a table by day and activity (so there will be one 
-# # group of rows for each activity that occurred each day.  
-# # For each group of rows, the day, time of day, activity name, and 
-# # elapsed seconds (difference between maximum and minimum) is calculated, 
-# query = "SELECT {0} AS day, {1} AS time_of_day, activity_name, {2} AS time_elapsed_seconds FROM {3} WHERE device_id='{4}'  GROUP BY day, activity_name, {5}".format(day, time_of_day, elapsed_seconds, table, _ID, day_and_time_of_day)
-
-
-local_time_departure = "CONVERT_TZ(FROM_UNIXTIME(double_departure/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00')"
-local_time_arrival = "CONVERT_TZ(FROM_UNIXTIME(double_arrival/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00')"
-day_of_week = "DAYNAME(CONVERT_TZ(FROM_UNIXTIME(double_departure/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00'))"
-start_date = "FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d')>'2017-01-30'" #Date I returned from NY
-
-query = "SELECT double_latitude, double_longitude, {0} AS departure, {1} AS arrival, address, {2} FROM locations_visit WHERE {3};".format(local_time_departure, local_time_arrival, day_of_week, start_date)
-
-locations_visit = make_query(cursor,query)
-
-addresses = unique_address(locations_visit, _EPSILON)
-
-norm_locations = normalize_address(locations_visit, addresses, _EPSILON)
-
-trips = join_trips(norm_locations)
-
-columns = ['Day_of_Week', 'Start_Time', 'End_Time', 'Duration', 'Start_Address', 'End_Address']
-
-trips_df = pd.DataFrame(trips, columns = columns)
-trips_bydate = trips_df.groupby('Day_of_Week')
-commute_toUniv = trips_bydate.apply(lambda x: x[(x['Start_Address']==_HOME) & (x['End_Address']==_UNIVERSITY)])
-commute_toHome = trips_bydate.apply(lambda x: x[(x['Start_Address']==_UNIVERSITY) & (x['End_Address']==_HOME)])
-
-commute_toUniv = handle_outliers(commute_toUniv, 'Duration').sort_values('Start_Time', ascending = True)
-commute_toHome = handle_outliers(commute_toHome, 'Duration').sort_values('Start_Time', ascending = True)
-
-plot_toUniv = commute_toUniv[['Start_Time','Duration']]
-plot_toUniv['Duration'] = plot_toUniv['Duration']/60 #Display in minutes
-
-plot_toHome = commute_toHome[['Start_Time','Duration']]
-plot_toHome['Duration'] = plot_toHome['Duration']/60 #Display in minutes
-
-@app.route('/')
-def index():
-    template = JINJA_ENVIRONMENT.get_template('templates/index.html')
-
-    cursor = _DB.cursor()
-    cursor.execute('SHOW TABLES')
-    
-    logging.info(cursor.fetchall())
-    
-    cursor.execute(query)
-    result = cursor.fetchall()
-    logging.info(result)
-    queries = [{'query':query, 'results':plot_toHome}]
-    context = {'queries':queries}
-    return template.render(context)
-
-# @app.route('/_update_table', methods=['POST']) 
-# def update_table():
-#     logging.info(request.get_json())
-#     cols = request.json['cols']
-#     logging.info(cols)
-#     result = get_all_data(make_query(cols, 10))
-#     logging.info(result)
-#     return json.dumps({'content' : result['rows'], 'headers' : result['columns']})
-
-# @app.route('/about')
-# def about():
-#     template = JINJA_ENVIRONMENT.get_template('templates/about.html')
-#     return template.render()
-
-# @app.route('/quality')
-# def quality():
-#     template = JINJA_ENVIRONMENT.get_template('templates/quality.html')
-#     return template.render()
-
-@app.errorhandler(404)
-def page_not_found(e):
-    """Return a custom 404 error."""
-    return 'Sorry, Nothing at this URL.', 404
-
-@app.errorhandler(500)
-def application_error(e):
-    """Return a custom 500 error."""
-    return 'Sorry, unexpected error: {}'.format(e), 500
-    
-# Takes the database link and the query as input
 def make_query(cursor, query):
     # this is for debugging -- comment it out for speed
     # once everything is working
@@ -262,6 +154,46 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
     # in your favorite set of units to get length.
     return arc
 
+# def coordinates_to_address(geolocator, coordinates):
+#     location = geolocator.reverse(coordinates);
+#     return location.address
+
+# query = "SELECT double_latitude, double_longitude FROM {0} WHERE device_id = '{1}' AND FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d')>'2017-01-30'".format(_LOCATIONS, _ID)
+
+# locations = make_query(cursor,query)
+
+#result = bin_locations(locations, 0.00001)
+
+query = "SELECT double_latitude, double_longitude, FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d %H:%i') FROM {0} WHERE device_id = '{1}' AND FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d')>'2017-01-30' AND (FROM_UNIXTIME(timestamp/1000,'%H:%i')>'08:30' AND FROM_UNIXTIME(timestamp/1000,'%H:%i')<'15:30')".format(_LOCATIONS, _ID)
+locations = make_query(cursor, query)
+print("Termino primer query")
+
+query = "SELECT double_latitude, double_longitude, COUNT(*) AS count FROM locations WHERE FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d')>'2017-01-29' GROUP BY double_latitude, double_longitude ORDER BY count DESC LIMIT 10;"
+locations = make_query(cursor, query)
+# for l in locations:
+#     coordinates = l[0:2]
+#     print (coordinates_to_address(geolocator,coordinates), l)
+# #locations = make_and_print_query(cursor, query, "locatons")
+
+print("Termino primer query")
+bins = bin_locations(locations, _EPSILON)
+
+
+#Bin Address location_visit
+query = "SELECT DISTINCT double_latitude, double_longitude FROM locations_visit;"
+locations = make_query(cursor, query)
+bins = bin_locations(locations, _EPSILON)
+num_bins = len(bins)
+
+local_time_departure = "CONVERT_TZ(FROM_UNIXTIME(double_departure/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00')"
+local_time_arrival = "CONVERT_TZ(FROM_UNIXTIME(double_arrival/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00')"
+day_of_week = "DAYNAME(CONVERT_TZ(FROM_UNIXTIME(double_departure/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00'))"
+start_date = "FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d')>'2017-01-30'" #Date I returned from NY
+
+query = "SELECT double_latitude, double_longitude, {0} AS departure, {1} AS arrival, address, {2} FROM locations_visit WHERE {3};".format(local_time_departure, local_time_arrival, day_of_week, start_date)
+print(query)
+locations_visit = make_query(cursor,query)
+
 def unique_address(locations_visit, epsilon):#Works with _EPSILON = 0.0001
     addresses = {}
     for location in locations_visit:
@@ -271,7 +203,10 @@ def unique_address(locations_visit, epsilon):#Works with _EPSILON = 0.0001
             addresses[bin] = location[4]
     return addresses
 
-def normalize_address(locations, addresses, epsilon):
+addresses = unique_address(locations_visit, addresses _EPSILON)
+
+
+def normalize_address(locations, epsilon):
     loc_list = []
     for loc in locations:
         #print(loc_list)
@@ -281,6 +216,12 @@ def normalize_address(locations, addresses, epsilon):
         location[4] = normalized_add
         loc_list.append(location)
     return loc_list
+
+norm_locations = normalize_address(locations_visit, _EPSILON)
+
+
+# for l in norm_locations:
+#     print(l)
 
 def join_trips(norm_locations):
     i=0
@@ -307,6 +248,25 @@ def join_trips(norm_locations):
                 i+=1
     return trips
 
+join_trips(norm_locations)
+
+trips = join_trips(norm_locations)
+
+# for t in trips:
+#     print t
+
+
+# print(pd.DataFrame(trips))
+columns = ['Day_of_Week', 'Start_Time', 'End_Time', 'Duration', 'Start_Address', 'End_Address']
+
+trips_df = pd.DataFrame(trips, columns = columns)
+trips_bydate = trips_df.groupby('Day_of_Week')
+commute_toUniv = trips_bydate.apply(lambda x: x[(x['Start_Address']==_HOME) & (x['End_Address']==_UNIVERSITY)])
+commute_toHome = trips_bydate.apply(lambda x: x[(x['Start_Address']==_UNIVERSITY) & (x['End_Address']==_HOME)])
+# commute = commute.apply(lambda x: x['Duration'] = )
+
+print(commute_toUniv['Duration'].median()/60)
+
 def handle_outliers(df, column):
     col = df[column]
     mean, std, median = col.mean(), col.std(), col.median()
@@ -315,3 +275,44 @@ def handle_outliers(df, column):
     col[outliers] = median  #Replace outliers with the median
     df[column] = col
     return df
+
+handle_outliers(commute_toHome, 'Duration')
+
+commute_toUniv = handle_outliers(commute_toUniv, 'Duration').sort_values('Start_Time', ascending = True)
+commute_toHome = handle_outliers(commute_toHome, 'Duration').sort_values('Start_Time', ascending = True)
+
+plot_toUniv = commute_toUniv[['Start_Time','Duration']]
+plot_toUniv['Duration'] = plot_toUniv['Duration']/60 #Display in minutes
+
+plot_toHome = commute_toHome[['Start_Time','Duration']]
+plot_toHome['Duration'] = plot_toHome['Duration']/60 #Display in minutes
+
+print(plot_toUniv)
+print(plot_toHome)
+# for r in bins:
+#     print(coordinates_to_address(geolocator, r))
+#     print(r)
+
+
+
+# print("Empezo segundo query")
+# # now get locations organized by day and hour 
+# time_of_day = "FROM_UNIXTIME(timestamp/1000,'%H')"
+# day = "FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d')"
+# query = "SELECT {0} as day, {1} as time_of_day, double_latitude, double_longitude FROM {2} GROUP BY day, time_of_day".format(day, time_of_day, _LOCATIONS)
+# locations = make_query(cursor, query)
+
+# # and get physical activity per day and hour
+# # activity name and duration in seconds
+# print("Empezo tercer query")
+# day_and_time_of_day = "FROM_UNIXTIME(timestamp/100, '%Y-%m-%d %H')"
+# query = "SELECT {0} as day, {1} as time_of_day, activity_name FROM {2} GROUP BY day, activity_name, {3}".format(day, time_of_day, _ACTIVITY, day_and_time_of_day)
+    
+# activities = make_query(cursor, query)
+    
+# # now we want to associate activities with locations. This will update the
+# # bins list with activities.
+# print("Empezo groupby")
+# result = group_activities_by_location(bins, locations, activities, _EPSILON)
+
+# print(bins)
