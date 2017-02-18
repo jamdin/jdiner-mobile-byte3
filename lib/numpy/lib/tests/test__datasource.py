@@ -1,25 +1,15 @@
-from __future__ import division, absolute_import, print_function
-
 import os
-import sys
 from tempfile import mkdtemp, mkstemp, NamedTemporaryFile
 from shutil import rmtree
+from urlparse import urlparse
+from urllib2 import URLError
+import urllib2
+
+from numpy.testing import *
 
 from numpy.compat import asbytes
-from numpy.testing import (
-    run_module_suite, TestCase, assert_, SkipTest
-    )
+
 import numpy.lib._datasource as datasource
-
-if sys.version_info[0] >= 3:
-    import urllib.request as urllib_request
-    from urllib.parse import urlparse
-    from urllib.error import URLError
-else:
-    import urllib2 as urllib_request
-    from urlparse import urlparse
-    from urllib2 import URLError
-
 
 def urlopen_stub(url, data=None):
     '''Stub to replace urlopen for testing.'''
@@ -29,19 +19,14 @@ def urlopen_stub(url, data=None):
     else:
         raise URLError('Name or service not known')
 
-# setup and teardown
 old_urlopen = None
-
-
 def setup():
     global old_urlopen
-
-    old_urlopen = urllib_request.urlopen
-    urllib_request.urlopen = urlopen_stub
-
+    old_urlopen = urllib2.urlopen
+    urllib2.urlopen = urlopen_stub
 
 def teardown():
-    urllib_request.urlopen = old_urlopen
+    urllib2.urlopen = old_urlopen
 
 # A valid website for more robust testing
 http_path = 'http://www.google.com/'
@@ -63,38 +48,30 @@ def valid_textfile(filedir):
     os.close(fd)
     return path
 
-
 def invalid_textfile(filedir):
     # Generate and return an invalid filename.
-    fd, path = mkstemp(suffix='.txt', prefix='dstmp_', dir=filedir)
+    fd, path = mkstemp(suffix='.txt', prefix='dstmp_',  dir=filedir)
     os.close(fd)
     os.remove(path)
     return path
 
-
 def valid_httpurl():
     return http_path+http_file
-
 
 def invalid_httpurl():
     return http_fakepath+http_fakefile
 
-
 def valid_baseurl():
     return http_path
-
 
 def invalid_baseurl():
     return http_fakepath
 
-
 def valid_httpfile():
     return http_file
 
-
 def invalid_httpfile():
     return http_fakefile
-
 
 class TestDataSourceOpen(TestCase):
     def setUp(self):
@@ -115,7 +92,7 @@ class TestDataSourceOpen(TestCase):
         self.assertRaises(IOError, self.ds.open, url)
         try:
             self.ds.open(url)
-        except IOError as e:
+        except IOError, e:
             # Regression test for bug fixed in r4342.
             assert_(e.errno is None)
 
@@ -137,7 +114,8 @@ class TestDataSourceOpen(TestCase):
             import gzip
         except ImportError:
             # We don't have the gzip capabilities to test.
-            raise SkipTest
+            import nose
+            raise nose.SkipTest
         # Test datasource's internal file_opener for Gzip files.
         filepath = os.path.join(self.tmpdir, 'foobar.txt.gz')
         fp = gzip.open(filepath, 'w')
@@ -153,7 +131,8 @@ class TestDataSourceOpen(TestCase):
             import bz2
         except ImportError:
             # We don't have the bz2 capabilities to test.
-            raise SkipTest
+            import nose
+            raise nose.SkipTest
         # Test datasource's internal file_opener for BZip2 files.
         filepath = os.path.join(self.tmpdir, 'foobar.txt.bz2')
         fp = bz2.BZ2File(filepath, 'w')
@@ -214,7 +193,7 @@ class TestDataSourceAbspath(TestCase):
         tmpfile = valid_textfile(self.tmpdir)
         tmpfilename = os.path.split(tmpfile)[-1]
         # Test with filename only
-        self.assertEqual(tmpfile, self.ds.abspath(tmpfilename))
+        self.assertEqual(tmpfile, self.ds.abspath(os.path.split(tmpfile)[-1]))
         # Test filename with complete path
         self.assertEqual(tmpfile, self.ds.abspath(tmpfile))
 
@@ -271,7 +250,7 @@ class TestRepositoryAbspath(TestCase):
 
     def test_ValidHTTP(self):
         scheme, netloc, upath, pms, qry, frg = urlparse(valid_httpurl())
-        local_path = os.path.join(self.repos._destpath, netloc,
+        local_path = os.path.join(self.repos._destpath, netloc, \
                                   upath.strip(os.sep).strip('/'))
         filepath = self.repos.abspath(valid_httpfile())
         self.assertEqual(local_path, filepath)
@@ -321,10 +300,9 @@ class TestRepositoryExists(TestCase):
         # would do.
         scheme, netloc, upath, pms, qry, frg = urlparse(localfile)
         local_path = os.path.join(self.repos._destpath, netloc)
-        os.mkdir(local_path, 0o0700)
+        os.mkdir(local_path, 0700)
         tmpfile = valid_textfile(local_path)
         assert_(self.repos.exists(tmpfile))
-
 
 class TestOpenFunc(TestCase):
     def setUp(self):

@@ -1,13 +1,10 @@
 #!/usr/bin/env python
-"""Prints type-coercion tables for the built-in NumPy types
-
-"""
-from __future__ import division, absolute_import, print_function
+"""Prints type-coercion tables for the built-in NumPy types"""
 
 import numpy as np
 
 # Generic object that can be added, but doesn't do anything else
-class GenericObject(object):
+class GenericObject:
     def __init__(self, v):
         self.v = v
 
@@ -20,28 +17,26 @@ class GenericObject(object):
     dtype = np.dtype('O')
 
 def print_cancast_table(ntypes):
-    print('X', end=' ')
-    for char in ntypes:
-        print(char, end=' ')
-    print()
+    print 'X',
+    for char in ntypes: print char,
+    print
     for row in ntypes:
-        print(row, end=' ')
+        print row,
         for col in ntypes:
-            print(int(np.can_cast(row, col)), end=' ')
-        print()
+            print int(np.can_cast(row, col)),
+        print
 
 def print_coercion_table(ntypes, inputfirstvalue, inputsecondvalue, firstarray, use_promote_types=False):
-    print('+', end=' ')
-    for char in ntypes:
-        print(char, end=' ')
-    print()
+    print '+',
+    for char in ntypes: print char,
+    print
     for row in ntypes:
         if row == 'O':
             rowtype = GenericObject
         else:
             rowtype = np.obj2sctype(row)
 
-        print(row, end=' ')
+        print row,
         for col in ntypes:
             if col == 'O':
                 coltype = GenericObject
@@ -56,7 +51,7 @@ def print_coercion_table(ntypes, inputfirstvalue, inputsecondvalue, firstarray, 
                 if use_promote_types:
                     char = np.promote_types(rowvalue.dtype, colvalue.dtype).char
                 else:
-                    value = np.add(rowvalue, colvalue)
+                    value = np.add(rowvalue,colvalue)
                     if isinstance(value, np.ndarray):
                         char = value.dtype.char
                     else:
@@ -67,25 +62,25 @@ def print_coercion_table(ntypes, inputfirstvalue, inputsecondvalue, firstarray, 
                 char = '@'
             except TypeError:
                 char = '#'
-            print(char, end=' ')
-        print()
+            print char,
+        print
 
-print("can cast")
+print "can cast"
 print_cancast_table(np.typecodes['All'])
-print()
-print("In these tables, ValueError is '!', OverflowError is '@', TypeError is '#'")
-print()
-print("scalar + scalar")
+print
+print "In these tables, ValueError is '!', OverflowError is '@', TypeError is '#'"
+print
+print "scalar + scalar"
 print_coercion_table(np.typecodes['All'], 0, 0, False)
-print()
-print("scalar + neg scalar")
+print
+print "scalar + neg scalar"
 print_coercion_table(np.typecodes['All'], 0, -1, False)
-print()
-print("array + scalar")
+print
+print "array + scalar"
 print_coercion_table(np.typecodes['All'], 0, 0, True)
-print()
-print("array + neg scalar")
+print
+print "array + neg scalar"
 print_coercion_table(np.typecodes['All'], 0, -1, True)
-print()
-print("promote_types")
+print
+print "promote_types"
 print_coercion_table(np.typecodes['All'], 0, 0, False, True)

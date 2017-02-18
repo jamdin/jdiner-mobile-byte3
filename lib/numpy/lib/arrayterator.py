@@ -7,15 +7,16 @@ an array object, and when iterated it will return sub-arrays with at most
 a user-specified number of elements.
 
 """
-from __future__ import division, absolute_import, print_function
+
+from __future__ import division
 
 from operator import mul
-from functools import reduce
-
-from numpy.compat import long
 
 __all__ = ['Arrayterator']
 
+import sys
+if sys.version_info[0] >= 3:
+    from functools import reduce
 
 class Arrayterator(object):
     """
@@ -69,8 +70,9 @@ class Arrayterator(object):
 
     Examples
     --------
+    >>> import numpy as np
     >>> a = np.arange(3 * 4 * 5 * 6).reshape(3, 4, 5, 6)
-    >>> a_itor = np.lib.Arrayterator(a, 2)
+    >>> a_itor = np.lib.arrayterator.Arrayterator(a, 2)
     >>> a_itor.shape
     (3, 4, 5, 6)
 
@@ -80,7 +82,7 @@ class Arrayterator(object):
 
     >>> for subarr in a_itor:
     ...     if not subarr.all():
-    ...         print(subarr, subarr.shape)
+    ...         print subarr, subarr.shape
     ...
     [[[[0 1]]]] (1, 1, 1, 2)
 
@@ -103,8 +105,7 @@ class Arrayterator(object):
 
         """
         # Fix index, handling ellipsis and incomplete slices.
-        if not isinstance(index, tuple):
-            index = (index,)
+        if not isinstance(index, tuple): index = (index,)
         fixed = []
         length, dims = len(index), len(self.shape)
         for slice_ in index:
@@ -148,17 +149,17 @@ class Arrayterator(object):
 
         See Also
         --------
-        Arrayterator
+        `Arrayterator`
         flatiter
 
         Examples
         --------
         >>> a = np.arange(3 * 4 * 5 * 6).reshape(3, 4, 5, 6)
-        >>> a_itor = np.lib.Arrayterator(a, 2)
+        >>> a_itor = np.lib.arrayterator.Arrayterator(a, 2)
 
         >>> for subarr in a_itor.flat:
         ...     if not subarr:
-        ...         print(subarr, type(subarr))
+        ...         print subarr, type(subarr)
         ...
         0 <type 'numpy.int32'>
 
@@ -180,15 +181,14 @@ class Arrayterator(object):
 
     def __iter__(self):
         # Skip arrays with degenerate dimensions
-        if [dim for dim in self.shape if dim <= 0]:
-            return
+        if [dim for dim in self.shape if dim <= 0]: raise StopIteration
 
         start = self.start[:]
         stop = self.stop[:]
         step = self.step[:]
         ndims = len(self.var.shape)
 
-        while True:
+        while 1:
             count = self.buf_size or reduce(mul, self.shape)
 
             # iterate over each dimension, looking for the
@@ -200,13 +200,12 @@ class Arrayterator(object):
                 # along higher dimensions, so we read only a single position
                 if count == 0:
                     stop[i] = start[i]+1
-                elif count <= self.shape[i]:
-                    # limit along this dimension
+                elif count <= self.shape[i]:  # limit along this dimension
                     stop[i] = start[i] + count*step[i]
                     rundim = i
                 else:
-                    # read everything along this dimension
-                    stop[i] = self.stop[i]
+                    stop[i] = self.stop[i]  # read everything along this
+                                            # dimension
                 stop[i] = min(self.stop[i], stop[i])
                 count = count//self.shape[i]
 
@@ -222,4 +221,4 @@ class Arrayterator(object):
                     start[i] = self.start[i]
                     start[i-1] += self.step[i-1]
             if start[0] >= self.stop[0]:
-                return
+                raise StopIteration

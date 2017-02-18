@@ -35,22 +35,22 @@ may now proceed to calculate the mean of the other values:
 .. [1] Not-a-Number, a floating point value that is the result of an
        invalid operation.
 
-.. moduleauthor:: Pierre Gerard-Marchant
-.. moduleauthor:: Jarrod Millman
-
 """
-from __future__ import division, absolute_import, print_function
+__author__ = "Pierre GF Gerard-Marchant ($Author: jarrod.millman $)"
+__version__ = '1.0'
+__revision__ = "$Revision: 3473 $"
+__date__     = '$Date: 2007-10-29 17:18:13 +0200 (Mon, 29 Oct 2007) $'
 
-from . import core
-from .core import *
+import core
+from core import *
 
-from . import extras
-from .extras import *
+import extras
+from extras import *
 
 __all__ = ['core', 'extras']
 __all__ += core.__all__
 __all__ += extras.__all__
 
-from numpy.testing.nosetester import _numpy_tester
-test = _numpy_tester().test
-bench = _numpy_tester().bench
+from numpy.testing import Tester
+test = Tester().test
+bench = Tester().bench

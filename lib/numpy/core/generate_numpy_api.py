@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 import os
 import genapi
 
@@ -8,18 +6,23 @@ from genapi import \
 
 import numpy_api
 
-# use annotated api when running under cpychecker
 h_template = r"""
-#if defined(_MULTIARRAYMODULE) || defined(WITH_CPYCHECKER_STEALS_REFERENCE_TO_ARG_ATTRIBUTE)
+#ifdef _MULTIARRAYMODULE
 
 typedef struct {
         PyObject_HEAD
         npy_bool obval;
 } PyBoolScalarObject;
 
+#ifdef NPY_ENABLE_SEPARATE_COMPILATION
 extern NPY_NO_EXPORT PyTypeObject PyArrayMapIter_Type;
 extern NPY_NO_EXPORT PyTypeObject PyArrayNeighborhoodIter_Type;
 extern NPY_NO_EXPORT PyBoolScalarObject _PyArrayScalar_BoolValues[2];
+#else
+NPY_NO_EXPORT PyTypeObject PyArrayMapIter_Type;
+NPY_NO_EXPORT PyTypeObject PyArrayNeighborhoodIter_Type;
+NPY_NO_EXPORT PyBoolScalarObject _PyArrayScalar_BoolValues[2];
+#endif
 
 %s
 
@@ -84,13 +87,13 @@ _import_array(void)
   /* Perform runtime check of C API version */
   if (NPY_VERSION != PyArray_GetNDArrayCVersion()) {
       PyErr_Format(PyExc_RuntimeError, "module compiled against "\
-             "ABI version 0x%%x but this version of numpy is 0x%%x", \
+             "ABI version %%x but this version of numpy is %%x", \
              (int) NPY_VERSION, (int) PyArray_GetNDArrayCVersion());
       return -1;
   }
   if (NPY_FEATURE_VERSION > PyArray_GetNDArrayCFeatureVersion()) {
       PyErr_Format(PyExc_RuntimeError, "module compiled against "\
-             "API version 0x%%x but this version of numpy is 0x%%x", \
+             "API version %%x but this version of numpy is %%x", \
              (int) NPY_FEATURE_VERSION, (int) PyArray_GetNDArrayCFeatureVersion());
       return -1;
   }
@@ -151,7 +154,7 @@ void *PyArray_API[] = {
 
 c_api_header = """
 ===========
-NumPy C-API
+Numpy C-API
 ===========
 """
 
@@ -178,11 +181,13 @@ def do_generate_api(targets, sources):
     doc_file = targets[2]
 
     global_vars = sources[0]
-    scalar_bool_values = sources[1]
-    types_api = sources[2]
-    multiarray_funcs = sources[3]
+    global_vars_types = sources[1]
+    scalar_bool_values = sources[2]
+    types_api = sources[3]
+    multiarray_funcs = sources[4]
 
-    multiarray_api = sources[:]
+    # Remove global_vars_type: not a api dict
+    multiarray_api = sources[:1] + sources[2:]
 
     module_list = []
     extension_list = []
@@ -201,27 +206,21 @@ def do_generate_api(targets, sources):
     multiarray_api_dict = {}
     for f in numpyapi_list:
         name = f.name
-        index = multiarray_funcs[name][0]
-        annotations = multiarray_funcs[name][1:]
-        multiarray_api_dict[f.name] = FunctionApi(f.name, index, annotations,
-                                                  f.return_type,
+        index = multiarray_funcs[name]
+        multiarray_api_dict[f.name] = FunctionApi(f.name, index, f.return_type,
                                                   f.args, api_name)
 
-    for name, val in global_vars.items():
-        index, type = val
+    for name, index in global_vars.items():
+        type = global_vars_types[name]
         multiarray_api_dict[name] = GlobalVarApi(name, index, type, api_name)
 
-    for name, val in scalar_bool_values.items():
-        index = val[0]
+    for name, index in scalar_bool_values.items():
         multiarray_api_dict[name] = BoolValuesApi(name, index, api_name)
 
-    for name, val in types_api.items():
-        index = val[0]
+    for name, index in types_api.items():
         multiarray_api_dict[name] = TypeApi(name, index, 'PyTypeObject', api_name)
 
-    if len(multiarray_api_dict) != len(multiarray_api_index):
-        raise AssertionError("Multiarray API size mismatch %d %d" %
-                        (len(multiarray_api_dict), len(multiarray_api_index)))
+    assert len(multiarray_api_dict) == len(multiarray_api_index)
 
     extension_list = []
     for name, index in genapi.order_dict(multiarray_api_index):

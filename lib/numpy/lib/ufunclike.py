@@ -1,10 +1,7 @@
 """
 Module of functions that are like ufuncs in acting on arrays and optionally
 storing results in an output array.
-
 """
-from __future__ import division, absolute_import, print_function
-
 __all__ = ['fix', 'isneginf', 'isposinf']
 
 import numpy.core.numeric as nx
@@ -82,7 +79,7 @@ def isposinf(x, y=None):
 
     Notes
     -----
-    NumPy uses the IEEE Standard for Binary Floating-Point for Arithmetic
+    Numpy uses the IEEE Standard for Binary Floating-Point for Arithmetic
     (IEEE 754).
 
     Errors result if the second argument is also supplied when `x` is a
@@ -145,7 +142,7 @@ def isneginf(x, y=None):
 
     Notes
     -----
-    NumPy uses the IEEE Standard for Binary Floating-Point for Arithmetic
+    Numpy uses the IEEE Standard for Binary Floating-Point for Arithmetic
     (IEEE 754).
 
     Errors result if the second argument is also supplied when x is a scalar
