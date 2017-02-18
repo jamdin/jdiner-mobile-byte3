@@ -7,6 +7,7 @@ import json
 import urllib
 import MySQLdb
 import math
+import numpy as np
 #import pandas as pd
 
 
@@ -239,14 +240,14 @@ def join_trips(norm_locations):
                 i+=1
     return trips
 
-def handle_outliers(df, column):
-    col = df[column]
-    mean, std, median = col.mean(), col.std(), col.median()
-    print('std',std)
-    outliers = (col - mean).abs() > 2.5*std
+def handle_outliers(list, col_index):
+    l_array = np.array(list)
+    col = l_array[:,col_index]
+    mean, std, median = col.mean(), col.std(), np.median(col)
+    outliers = np.absolute(col - mean) > 2.5*std
     col[outliers] = median  #Replace outliers with the median
-    df[column] = col
-    return df
+    l_array[:,col_index] = col
+    return l_array
 
 
 #####################################################################################################
@@ -271,6 +272,23 @@ addresses = unique_address(locations_visit, _EPSILON)
 norm_locations = normalize_address(locations_visit, addresses, _EPSILON)
 
 trips = join_trips(norm_locations)
+
+start_address_index = 4
+end_address_index = 5
+total_time_index = 3
+start_time_index = 1
+
+commute_toUniv = [t for t in trips if (t[start_address_index] == _HOME) & (t[end_address_index] == _UNIVERSITY)]
+commute_toHome = [t for t in trips if (t[start_address_index] == _UNIVERSITY) & (t[end_address_index] == _HOME)]
+
+commute_toUniv = handle_outliers(commute_toUniv, total_time_index)
+commute_toHome = handle_outliers(commute_toHome, total_time_index)
+
+plot_toUniv = commute_toUniv[:,[start_time_index, total_time_index]]
+plot_toUniv[:,1] = plot_toUniv[:,1]/60 #Display in minutes
+
+plot_toHome = commute_toHome[:,[start_time_index, total_time_index]]
+plot_toHome[:,1] = plot_toHome[:,1]/60 #Display in minutes
 
 # columns = ['Day_of_Week', 'Start_Time', 'End_Time', 'Duration', 'Start_Address', 'End_Address']
 
@@ -299,7 +317,7 @@ def index():
     cursor.execute(query)
     result = cursor.fetchall()
     logging.info(result)
-    queries = [{'query':query, 'results':trips}]
+    queries = [{'query':query, 'results':plot_toHome}]
     context = {'queries':queries}
     return template.render(context)
 

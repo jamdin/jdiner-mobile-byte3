@@ -244,11 +244,6 @@ start_time_index = 1
 commute_toUniv = [t for t in trips if (t[start_address_index] == _HOME) & (t[end_address_index] == _UNIVERSITY)]
 commute_toHome = [t for t in trips if (t[start_address_index] == _UNIVERSITY) & (t[end_address_index] == _HOME)]
 
-for c in commute_toUniv:
-    print(c)
-
-for c in commute_toHome:
-    print(c)
 
 def handle_outliers(list, col_index):
     l_array = np.array(list)
