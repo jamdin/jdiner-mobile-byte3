@@ -48,3 +48,5 @@ libraries:
    version: latest
 -  name: MySQLdb
    version: latest
+-  name: numpy
+   version: 1.6.1
