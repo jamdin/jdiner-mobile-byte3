@@ -6,7 +6,8 @@ import logging
 import json
 import urllib
 import MySQLdb
-import pandas as pd
+import math
+#import pandas as pd
 
 
 JINJA_ENVIRONMENT = jinja2.Environment(
@@ -36,6 +37,9 @@ if (os.getenv('SERVER_SOFTWARE') and
 else:
     _DB = MySQLdb.connect(host=_IPADDRESS, port=3306, db=_DB_NAME, user=_USER, passwd = _PSWD, charset='utf8')
 
+cursor = _DB.cursor()
+
+
 # # turns a unix timestamp into Year-month-day format
 # day = "FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d')"
 # # turns a unix timestamp into Hour:minute format
@@ -52,83 +56,11 @@ else:
 # # elapsed seconds (difference between maximum and minimum) is calculated, 
 # query = "SELECT {0} AS day, {1} AS time_of_day, activity_name, {2} AS time_elapsed_seconds FROM {3} WHERE device_id='{4}'  GROUP BY day, activity_name, {5}".format(day, time_of_day, elapsed_seconds, table, _ID, day_and_time_of_day)
 
+#####################################################################################################
+#############                               FUNCTIONS                                   #############
+#####################################################################################################
 
-local_time_departure = "CONVERT_TZ(FROM_UNIXTIME(double_departure/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00')"
-local_time_arrival = "CONVERT_TZ(FROM_UNIXTIME(double_arrival/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00')"
-day_of_week = "DAYNAME(CONVERT_TZ(FROM_UNIXTIME(double_departure/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00'))"
-start_date = "FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d')>'2017-01-30'" #Date I returned from NY
 
-query = "SELECT double_latitude, double_longitude, {0} AS departure, {1} AS arrival, address, {2} FROM locations_visit WHERE {3};".format(local_time_departure, local_time_arrival, day_of_week, start_date)
-
-locations_visit = make_query(cursor,query)
-
-addresses = unique_address(locations_visit, _EPSILON)
-
-norm_locations = normalize_address(locations_visit, addresses, _EPSILON)
-
-trips = join_trips(norm_locations)
-
-columns = ['Day_of_Week', 'Start_Time', 'End_Time', 'Duration', 'Start_Address', 'End_Address']
-
-trips_df = pd.DataFrame(trips, columns = columns)
-trips_bydate = trips_df.groupby('Day_of_Week')
-commute_toUniv = trips_bydate.apply(lambda x: x[(x['Start_Address']==_HOME) & (x['End_Address']==_UNIVERSITY)])
-commute_toHome = trips_bydate.apply(lambda x: x[(x['Start_Address']==_UNIVERSITY) & (x['End_Address']==_HOME)])
-
-commute_toUniv = handle_outliers(commute_toUniv, 'Duration').sort_values('Start_Time', ascending = True)
-commute_toHome = handle_outliers(commute_toHome, 'Duration').sort_values('Start_Time', ascending = True)
-
-plot_toUniv = commute_toUniv[['Start_Time','Duration']]
-plot_toUniv['Duration'] = plot_toUniv['Duration']/60 #Display in minutes
-
-plot_toHome = commute_toHome[['Start_Time','Duration']]
-plot_toHome['Duration'] = plot_toHome['Duration']/60 #Display in minutes
-
-@app.route('/')
-def index():
-    template = JINJA_ENVIRONMENT.get_template('templates/index.html')
-
-    cursor = _DB.cursor()
-    cursor.execute('SHOW TABLES')
-    
-    logging.info(cursor.fetchall())
-    
-    cursor.execute(query)
-    result = cursor.fetchall()
-    logging.info(result)
-    queries = [{'query':query, 'results':result}]
-    context = {'queries':queries}
-    return template.render(context)
-
-# @app.route('/_update_table', methods=['POST']) 
-# def update_table():
-#     logging.info(request.get_json())
-#     cols = request.json['cols']
-#     logging.info(cols)
-#     result = get_all_data(make_query(cols, 10))
-#     logging.info(result)
-#     return json.dumps({'content' : result['rows'], 'headers' : result['columns']})
-
-# @app.route('/about')
-# def about():
-#     template = JINJA_ENVIRONMENT.get_template('templates/about.html')
-#     return template.render()
-
-# @app.route('/quality')
-# def quality():
-#     template = JINJA_ENVIRONMENT.get_template('templates/quality.html')
-#     return template.render()
-
-@app.errorhandler(404)
-def page_not_found(e):
-    """Return a custom 404 error."""
-    return 'Sorry, Nothing at this URL.', 404
-
-@app.errorhandler(500)
-def application_error(e):
-    """Return a custom 500 error."""
-    return 'Sorry, unexpected error: {}'.format(e), 500
-    
 # Takes the database link and the query as input
 def make_query(cursor, query):
     # this is for debugging -- comment it out for speed
@@ -315,3 +247,88 @@ def handle_outliers(df, column):
     col[outliers] = median  #Replace outliers with the median
     df[column] = col
     return df
+
+
+#####################################################################################################
+#############                           END    FUNCTIONS                                #############
+#####################################################################################################
+
+
+
+
+local_time_departure = "CONVERT_TZ(FROM_UNIXTIME(double_departure/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00')"
+local_time_arrival = "CONVERT_TZ(FROM_UNIXTIME(double_arrival/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00')"
+day_of_week = "DAYNAME(CONVERT_TZ(FROM_UNIXTIME(double_departure/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00'))"
+start_date = "FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d')>'2017-01-30'" #Date I returned from NY
+
+query = "SELECT double_latitude, double_longitude, {0} AS departure, {1} AS arrival, address, {2} FROM locations_visit WHERE {3};".format(local_time_departure, local_time_arrival, day_of_week, start_date)
+
+locations_visit = make_query(cursor,query)
+bins = bin_locations(locations_visit, _EPSILON)
+
+addresses = unique_address(locations_visit, _EPSILON)
+
+norm_locations = normalize_address(locations_visit, addresses, _EPSILON)
+
+trips = join_trips(norm_locations)
+
+# columns = ['Day_of_Week', 'Start_Time', 'End_Time', 'Duration', 'Start_Address', 'End_Address']
+
+# trips_df = pd.DataFrame(trips, columns = columns)
+# trips_bydate = trips_df.groupby('Day_of_Week')
+# commute_toUniv = trips_bydate.apply(lambda x: x[(x['Start_Address']==_HOME) & (x['End_Address']==_UNIVERSITY)])
+# commute_toHome = trips_bydate.apply(lambda x: x[(x['Start_Address']==_UNIVERSITY) & (x['End_Address']==_HOME)])
+
+# commute_toUniv = handle_outliers(commute_toUniv, 'Duration').sort_values('Start_Time', ascending = True)
+# commute_toHome = handle_outliers(commute_toHome, 'Duration').sort_values('Start_Time', ascending = True)
+
+# plot_toUniv = commute_toUniv[['Start_Time','Duration']]
+# plot_toUniv['Duration'] = plot_toUniv['Duration']/60 #Display in minutes
+
+# plot_toHome = commute_toHome[['Start_Time','Duration']]
+# plot_toHome['Duration'] = plot_toHome['Duration']/60 #Display in minutes
+
+@app.route('/')
+def index():
+    template = JINJA_ENVIRONMENT.get_template('templates/index.html')
+
+    cursor.execute('SHOW TABLES')
+    
+    logging.info(cursor.fetchall())
+    
+    cursor.execute(query)
+    result = cursor.fetchall()
+    logging.info(result)
+    queries = [{'query':query, 'results':trips}]
+    context = {'queries':queries}
+    return template.render(context)
+
+# @app.route('/_update_table', methods=['POST']) 
+# def update_table():
+#     logging.info(request.get_json())
+#     cols = request.json['cols']
+#     logging.info(cols)
+#     result = get_all_data(make_query(cols, 10))
+#     logging.info(result)
+#     return json.dumps({'content' : result['rows'], 'headers' : result['columns']})
+
+# @app.route('/about')
+# def about():
+#     template = JINJA_ENVIRONMENT.get_template('templates/about.html')
+#     return template.render()
+
+# @app.route('/quality')
+# def quality():
+#     template = JINJA_ENVIRONMENT.get_template('templates/quality.html')
+#     return template.render()
+
+@app.errorhandler(404)
+def page_not_found(e):
+    """Return a custom 404 error."""
+    return 'Sorry, Nothing at this URL.', 404
+
+@app.errorhandler(500)
+def application_error(e):
+    """Return a custom 500 error."""
+    return 'Sorry, unexpected error: {}'.format(e), 500
+    
