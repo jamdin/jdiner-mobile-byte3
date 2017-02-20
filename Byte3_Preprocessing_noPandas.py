@@ -2,6 +2,7 @@ import MySQLdb
 import math
 import numpy as np
 import logging
+from datetime import timedelta, datetime
 # from geopy.geocoders import Nominatim
 
 _INSTANCE_NAME = 'jdiner-mobile-byte3:mobile-data'
@@ -241,8 +242,8 @@ end_address_index = 5
 total_time_index = 3
 start_time_index = 1
 
-commute_toUniv = [t for t in trips if (t[start_address_index] == _HOME) & (t[end_address_index] == _UNIVERSITY)]
-commute_toHome = [t for t in trips if (t[start_address_index] == _UNIVERSITY) & (t[end_address_index] == _HOME)]
+commute_toUniv = [t for t in trips if (t[start_address_index] == _HOME) & (t[end_address_index] == _UNIVERSITY) & (t[start_time_index].time() < t[start_time_index].time().replace(hour=16, minute = 0))]
+# commute_toHome = [t for t in trips if (t[start_address_index] == _UNIVERSITY) & (t[end_address_index] == _HOME)]
 
 
 def handle_outliers(list, col_index):
@@ -256,13 +257,64 @@ def handle_outliers(list, col_index):
 
 
 commute_toUniv = handle_outliers(commute_toUniv, total_time_index)
-commute_toHome = handle_outliers(commute_toHome, total_time_index)
+# commute_toHome = handle_outliers(commute_toHome, total_time_index)
 
 plot_toUniv = commute_toUniv[:,[start_time_index, total_time_index]]
 plot_toUniv[:,1] = plot_toUniv[:,1]/60 #Display in minutes
 
-plot_toHome = commute_toHome[:,[start_time_index, total_time_index]]
-plot_toHome[:,1] = plot_toHome[:,1]/60 #Display in minutes
+# plot_toHome = commute_toHome[:,[start_time_index, total_time_index]]
+# plot_toHome[:,1] = plot_toHome[:,1]/60 #Display in minutes
 
 print(plot_toUniv)
-print(plot_toHome)
+# print(plot_toHome)
+
+date = "CONVERT_TZ(FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d %H:%i:%s'),'+00:00','-05:00')"
+temp_fahr = "1.8*(temperature)-459.67"
+
+query = "SELECT {0} AS Date, {1} AS temperature FROM plugin_openweather WHERE {0}>'2017-01-30'".format(date, temp_fahr);
+temp = make_query(cursor, query)
+
+print(len(temp))
+
+temp_index = 1
+temperatures = handle_outliers(temp, temp_index)
+
+def nearest_temperature(trip, temperatures):
+    date = trip[0]
+    temp_time = [t[0] for t in temperatures]
+    temp_temp = [t[1] for t in temperatures]
+    closest_time = min(temp_time, key=lambda d: abs(d - date))
+    temp_index = temp_time.index(closest_time)
+    if abs(date-closest_time) > timedelta(hours=2):#If the time for the temperature is more than 2 hours away
+        temp_range = range(temp_index-2, temp_index+3)
+        temp = np.mean([temp_temp[i] for i in temp_range]) #Mean of a window of 5
+    else:
+        temp = temp_temp[temp_index]
+    return temp
+
+closest_temperatures = [nearest_temperature(trip,temperatures) for trip in plot_toUniv]
+data_toUniv = np.column_stack((plot_toUniv, closest_temperatures))
+
+print(nearest_temperature(plot_toUniv[0], temp))
+
+
+
+
+class_start_time = {'Monday': '13:30', 'Tuesday': '09:00', 'Wednesday': '13:30', 'Thursday': '09:00', 'Friday': '15:00'}
+
+
+def time_to_class(trip, class_start_time):
+    date = trip[0]
+    weekday = date.strftime('%A')
+    #start_time = class_start_time[weekday]
+    start_time = datetime.strptime(class_start_time[weekday], '%H:%M').time()
+    trip_time = date.time()
+    
+    class_seconds = (start_time.hour*60*60 + start_time.minute*60 + start_time.second)
+    trip_seconds = (trip_time.hour*60*60 + trip_time.minute*60 + trip_time.second)
+    delta_minutes = (class_seconds - trip_seconds)/60
+    return delta_minutes
+
+time_class = [time_to_class(trip,class_start_time) for trip in plot_toUniv]
+
+time_toUniv = np.column_stack((plot_toUniv, time_class))

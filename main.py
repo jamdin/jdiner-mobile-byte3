@@ -8,6 +8,7 @@ import urllib
 import MySQLdb
 import math
 import numpy as np
+from datetime import timedelta, datetime
 #import pandas as pd
 
 
@@ -249,18 +250,41 @@ def handle_outliers(list, col_index):
     l_array[:,col_index] = col
     return l_array
 
+def nearest_temperature(trip, temperatures):
+    date = trip[0]
+    temp_time = [t[0] for t in temperatures]
+    temp_temp = [t[1] for t in temperatures]
+    closest_time = min(temp_time, key=lambda d: abs(d - date))
+    temp_index = temp_time.index(closest_time)
+    if abs(date-closest_time) > timedelta(hours=2):#If the time for the temperature is more than 2 hours away
+        temp_range = range(temp_index-2, temp_index+3)
+        temp = np.mean([temp_temp[i] for i in temp_range]) #Mean of a window of 5
+    else:
+        temp = temp_temp[temp_index]
+    return temp
+
+def time_to_class(trip, class_start_time):
+    date = trip[0]
+    weekday = date.strftime('%A')
+    #start_time = class_start_time[weekday]
+    start_time = datetime.strptime(class_start_time[weekday], '%H:%M').time()
+    trip_time = date.time()
+    
+    class_seconds = (start_time.hour*60*60 + start_time.minute*60 + start_time.second)
+    trip_seconds = (trip_time.hour*60*60 + trip_time.minute*60 + trip_time.second)
+    delta_minutes = (class_seconds - trip_seconds)/60
+    return delta_minutes
 
 #####################################################################################################
 #############                           END    FUNCTIONS                                #############
 #####################################################################################################
 
 
-
-
 local_time_departure = "CONVERT_TZ(FROM_UNIXTIME(double_departure/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00')"
 local_time_arrival = "CONVERT_TZ(FROM_UNIXTIME(double_arrival/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00')"
 day_of_week = "DAYNAME(CONVERT_TZ(FROM_UNIXTIME(double_departure/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00'))"
 start_date = "FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d')>'2017-01-30'" #Date I returned from NY
+#max_time = "TIME(CONVERT_TZ(FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00'))<MAKETIME(16,0,0)"
 
 query = "SELECT double_latitude, double_longitude, {0} AS departure, {1} AS arrival, address, {2} FROM locations_visit WHERE {3};".format(local_time_departure, local_time_arrival, day_of_week, start_date)
 
@@ -278,7 +302,9 @@ end_address_index = 5
 total_time_index = 3
 start_time_index = 1
 
-commute_toUniv = [t for t in trips if (t[start_address_index] == _HOME) & (t[end_address_index] == _UNIVERSITY)]
+
+commute_toUniv = [t for t in trips if (t[start_address_index] == _HOME) & (t[end_address_index] == _UNIVERSITY) & (t[start_time_index].time() < t[start_time_index].time().replace(hour=16, minute = 0))]
+# commute_toUniv = [t for t in trips if (t[start_address_index] == _HOME) & (t[end_address_index] == _UNIVERSITY)]
 commute_toHome = [t for t in trips if (t[start_address_index] == _UNIVERSITY) & (t[end_address_index] == _HOME)]
 
 commute_toUniv = handle_outliers(commute_toUniv, total_time_index)
@@ -290,34 +316,32 @@ plot_toUniv[:,1] = plot_toUniv[:,1]/60 #Display in minutes
 plot_toHome = commute_toHome[:,[start_time_index, total_time_index]]
 plot_toHome[:,1] = plot_toHome[:,1]/60 #Display in minutes
 
-# columns = ['Day_of_Week', 'Start_Time', 'End_Time', 'Duration', 'Start_Address', 'End_Address']
 
-# trips_df = pd.DataFrame(trips, columns = columns)
-# trips_bydate = trips_df.groupby('Day_of_Week')
-# commute_toUniv = trips_bydate.apply(lambda x: x[(x['Start_Address']==_HOME) & (x['End_Address']==_UNIVERSITY)])
-# commute_toHome = trips_bydate.apply(lambda x: x[(x['Start_Address']==_UNIVERSITY) & (x['End_Address']==_HOME)])
+date = "CONVERT_TZ(FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d %H:%i:%s'),'+00:00','-05:00')"
+temp_fahr = "1.8*(temperature)-459.67"
 
-# commute_toUniv = handle_outliers(commute_toUniv, 'Duration').sort_values('Start_Time', ascending = True)
-# commute_toHome = handle_outliers(commute_toHome, 'Duration').sort_values('Start_Time', ascending = True)
+query = "SELECT {0} AS Date, {1} AS temperature FROM plugin_openweather WHERE {0}>'2017-01-30'".format(date, temp_fahr);
+temp = make_query(cursor, query)
 
-# plot_toUniv = commute_toUniv[['Start_Time','Duration']]
-# plot_toUniv['Duration'] = plot_toUniv['Duration']/60 #Display in minutes
+temp_index = 1
+temperatures = handle_outliers(temp, temp_index)
 
-# plot_toHome = commute_toHome[['Start_Time','Duration']]
-# plot_toHome['Duration'] = plot_toHome['Duration']/60 #Display in minutes
+closest_temperatures = [nearest_temperature(trip,temperatures) for trip in plot_toUniv]
+data_toUniv = np.column_stack((plot_toUniv, closest_temperatures))
+logging.info(data_toUniv)
+
+
+class_start_time = {'Monday': '13:30', 'Tuesday': '09:00', 'Wednesday': '13:30', 'Thursday': '09:00', 'Friday': '15:00'}
+time_class = [time_to_class(trip,class_start_time) for trip in plot_toUniv]
+time_toUniv = np.column_stack((plot_toUniv, time_class))
+
 
 @app.route('/')
 def index():
     template = JINJA_ENVIRONMENT.get_template('templates/index.html')
 
-    cursor.execute('SHOW TABLES')
-    
-    logging.info(cursor.fetchall())
-    
-    cursor.execute(query)
-    result = cursor.fetchall()
-    logging.info(result)
-    queries = [{'query':query, 'results':plot_toHome}]
+    queries = [{'query':query, 'results':data_toUniv}]
+    queries = queries + [{'query':query, 'results':time_toUniv}]
     context = {'queries':queries}
     return template.render(context)
 
@@ -330,15 +354,15 @@ def index():
 #     logging.info(result)
 #     return json.dumps({'content' : result['rows'], 'headers' : result['columns']})
 
-# @app.route('/about')
-# def about():
-#     template = JINJA_ENVIRONMENT.get_template('templates/about.html')
-#     return template.render()
+@app.route('/about')
+def about():
+    template = JINJA_ENVIRONMENT.get_template('templates/about.html')
+    return template.render()
 
-# @app.route('/quality')
-# def quality():
-#     template = JINJA_ENVIRONMENT.get_template('templates/quality.html')
-#     return template.render()
+@app.route('/quality')
+def quality():
+    template = JINJA_ENVIRONMENT.get_template('templates/quality.html')
+    return template.render()
 
 @app.errorhandler(404)
 def page_not_found(e):

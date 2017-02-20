@@ -17,6 +17,20 @@
     <link href="css/bootstrap-theme.min.css" rel="stylesheet">
     <!-- Custom styles for this template -->
     <link href="css/theme.css" rel="stylesheet">
+
+<!-- Vega-lite visualization libraries -->
+    <script src="//d3js.org/d3.v3.min.js"></script>
+    <script src="//vega.github.io/vega/vega.js"></script>
+    <script src="//vega.github.io/vega-lite/vega-lite.js"></script>
+    <script src="//vega.github.io/vega-editor/vendor/vega-embed.js" charset="utf-8"></script>
+    
+    <style media="screen">
+   /* Add space between vega-embed links  */
+    .vega-actions a {
+      margin-right: 5px;
+    }
+    </style>
+
   </head>
 
   <body role="document">
@@ -59,6 +73,7 @@
    </li>
    {% endfor %}
 
+
    <div class="page-header">
 	<p> You should add information here, including some tables
 	and/or charts, telling the reader about the relationship
@@ -70,6 +85,8 @@
       </div> <!-- /page-header -->
     </div> <!-- /container -->
 
+    <div id="vis"></div>
+    <div id="vis2"></div>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
@@ -78,4 +95,102 @@
     <script src="js/bootstrap.min.js"></script>
     <script src="js/docs.min.js"></script>
   </body>
+
+  <script>
+   // Assign the specification to a local variable vlSpec.
+   var vlSpec = {
+     "data": {
+       "values": [
+    {% for row in queries[0].results %}
+        {"date": "{{row[0]}}", "count": "{{row[1]}}", "temperature": "{{row[2]}}"},
+    {% endfor %}
+    ]
+     },
+     "mark": "bar",
+     "encoding": {
+       "x": {
+        "field": "date", "type": "nominal",
+     "axis": {
+         "title": "Date"
+      }},
+       "y": {
+         "field": "count", "type": "quantitative",
+         "axis": {
+           "title": "Time from Home to University (minutes)"
+         }
+       },
+       "color": {
+      "field": "temperature",
+      "type": "quantitative",
+      "scale": {
+        "domain": [22,35,48],
+        "range": ["#2b8cbe","#E0E0E0","#F03B20"]
+      }
+     }
+   }};
+ 
+   var embedSpec = {
+     mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
+     spec: vlSpec
+     // You can add more vega-embed configuration properties here.
+     // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
+   };
+ 
+   // Embed the visualization in the container with id `vis`
+   vg.embed("#vis", embedSpec, function(error, result) {
+     // Callback receiving the View instance and parsed Vega spec
+     // result.view is the View, which resides under the '#vis' element
+   });
+  </script>
+
+
+  <script>
+   // Assign the specification to a local variable vlSpec.
+   var vlSpec2 = {
+     "data": {
+       "values": [
+    {% for row in queries[1].results %}
+        {"date": "{{row[0]}}", "count": "{{row[1]}}", "Time to Class": "{{row[2]}}"},
+    {% endfor %}
+    ]
+     },
+     "mark": "bar",
+     "encoding": {
+       "x": {
+        "field": "date", "type": "nominal",
+     "axis": {
+         "title": "Date"
+      }},
+       "y": {
+         "field": "count", "type": "quantitative",
+         "axis": {
+           "title": "Time from Home to University (minutes)"
+         }
+       },
+       "color": {
+      "field": "Time to Class",
+      "type": "quantitative",
+      "scale": {
+        "domain": [256,0,-5],
+        "range": ["#2b8cbe","#E0E0E0","#F03B20"]
+      }
+     }
+   }};
+ 
+   var embedSpec = {
+     mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
+     spec: vlSpec2
+     // You can add more vega-embed configuration properties here.
+     // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
+   };
+ 
+   // Embed the visualization in the container with id `vis`
+   vg.embed("#vis2", embedSpec, function(error, result) {
+     // Callback receiving the View instance and parsed Vega spec
+     // result.view is the View, which resides under the '#vis' element
+   });
+  </script>
+
+
+
 </html>
