@@ -248,11 +248,15 @@ commute_toUniv = [t for t in trips if (t[start_address_index] == _HOME) & (t[end
 
 def handle_outliers(list, col_index):
     l_array = np.array(list)
-    col = l_array[:,col_index]
+    if l_array.ndim ==1:
+        col = l_array
+    else:
+        col = l_array[:,col_index]
     mean, std, median = col.mean(), col.std(), np.median(col)
-    outliers = np.absolute(col - mean) > 2.5*std
+    outliers = np.absolute(col - mean) > 2*std
     col[outliers] = median  #Replace outliers with the median
-    l_array[:,col_index] = col
+    if l_array.ndim>1:
+        l_array[:,col_index] = col
     return l_array
 
 
@@ -294,6 +298,7 @@ def nearest_temperature(trip, temperatures):
 
 closest_temperatures = [nearest_temperature(trip,temperatures) for trip in plot_toUniv]
 data_toUniv = np.column_stack((plot_toUniv, closest_temperatures))
+data_toUniv = data_toUniv[data_toUniv[:,1].argsort()]
 
 print(nearest_temperature(plot_toUniv[0], temp))
 
@@ -317,4 +322,21 @@ def time_to_class(trip, class_start_time):
 
 time_class = [time_to_class(trip,class_start_time) for trip in plot_toUniv]
 
+time_class = handle_outliers(time_class, 0)
+
 time_toUniv = np.column_stack((plot_toUniv, time_class))
+time_toUniv = time_toUniv[time_toUniv[:,1].argsort()]
+
+
+
+###Aggregate Data
+
+#Walking
+day_of_week = "DAYNAME(CONVERT_TZ(FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00'))"
+hour_of_day = "HOUR(CONVERT_TZ(FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00'))"
+activity_name = "'walking'"
+
+query = "SELECT {0} AS Weekday, {1}, COUNT(*) FROM {2} WHERE activity_name = {3} GROUP BY {0},{1}, activity_name;".format(day_of_week, hour_of_day, _ACTIVITY, activity_name)
+walking_aggregated = make_query(cursor,query)
+
+print(activities)

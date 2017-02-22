@@ -243,11 +243,15 @@ def join_trips(norm_locations):
 
 def handle_outliers(list, col_index):
     l_array = np.array(list)
-    col = l_array[:,col_index]
+    if l_array.ndim ==1:
+        col = l_array
+    else:
+        col = l_array[:,col_index]
     mean, std, median = col.mean(), col.std(), np.median(col)
-    outliers = np.absolute(col - mean) > 2.5*std
+    outliers = np.absolute(col - mean) > 2*std
     col[outliers] = median  #Replace outliers with the median
-    l_array[:,col_index] = col
+    if l_array.ndim>1:
+        l_array[:,col_index] = col
     return l_array
 
 def nearest_temperature(trip, temperatures):
@@ -328,12 +332,15 @@ temperatures = handle_outliers(temp, temp_index)
 
 closest_temperatures = [nearest_temperature(trip,temperatures) for trip in plot_toUniv]
 data_toUniv = np.column_stack((plot_toUniv, closest_temperatures))
+data_toUniv = data_toUniv[data_toUniv[:,1].argsort()] #Sort the data
 logging.info(data_toUniv)
 
 
 class_start_time = {'Monday': '13:30', 'Tuesday': '09:00', 'Wednesday': '13:30', 'Thursday': '09:00', 'Friday': '15:00'}
 time_class = [time_to_class(trip,class_start_time) for trip in plot_toUniv]
+time_class = handle_outliers(time_class, 0)
 time_toUniv = np.column_stack((plot_toUniv, time_class))
+time_toUniv = time_toUniv[time_toUniv[:,1].argsort()]
 
 
 @app.route('/')

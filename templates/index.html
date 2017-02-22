@@ -85,8 +85,8 @@
       </div> <!-- /page-header -->
     </div> <!-- /container -->
 
-    <div id="vis"></div>
-    <div id="vis2"></div>
+    <center><div id="vis"></div></center>
+    <center><div id="vis2"></div></center>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
@@ -99,35 +99,58 @@
   <script>
    // Assign the specification to a local variable vlSpec.
    var vlSpec = {
-     "data": {
+
+    "layers": [
+
+     {"data": {
        "values": [
     {% for row in queries[0].results %}
         {"date": "{{row[0]}}", "count": "{{row[1]}}", "temperature": "{{row[2]}}"},
     {% endfor %}
     ]
      },
-     "mark": "bar",
-     "encoding": {
-       "x": {
-        "field": "date", "type": "nominal",
-     "axis": {
-         "title": "Date"
-      }},
-       "y": {
-         "field": "count", "type": "quantitative",
-         "axis": {
-           "title": "Time from Home to University (minutes)"
-         }
-       },
-       "color": {
+      "mark": "bar",
+    "encoding": {
+    "x": {
+      "field": "date",
+      "type": "nominal",
+      "axis": {"title": "Date"},
+      "sort": false
+    },
+    "y": {
+      "field": "count",
+      "type": "quantitative",
+      "axis": {"title": "Time from Home to University (minutes)"}
+    }
+  }
+},
+{"data": {
+       "values": [
+    {% for row in queries[0].results %}
+        {"date": "{{row[0]}}", "count": "{{row[1]}}", "temperature": "{{row[2]}}"},
+    {% endfor %}
+    ]
+     },
+       "mark": "point",
+  "encoding": {
+    "x": {
+      "field": "date",
+      "type": "nominal",
+      "axis": {
+        "title": "Date"
+      },
+      "sort": false
+    },
+    "y": {
       "field": "temperature",
       "type": "quantitative",
-      "scale": {
-        "domain": [22,35,48],
-        "range": ["#2b8cbe","#E0E0E0","#F03B20"]
-      }
-     }
-   }};
+      "axis": { "title": "Temperature (Fahrenheit)"}
+    }
+  }
+}],
+"resolve":{
+ "y": {"scale": "independent"}
+}};
  
    var embedSpec = {
      mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
@@ -154,28 +177,42 @@
     {% endfor %}
     ]
      },
-     "mark": "bar",
-     "encoding": {
-       "x": {
-        "field": "date", "type": "nominal",
-     "axis": {
-         "title": "Date"
-      }},
-       "y": {
-         "field": "count", "type": "quantitative",
-         "axis": {
-           "title": "Time from Home to University (minutes)"
-         }
-       },
-       "color": {
+       "mark": "bar",
+  "encoding": {
+    "x": {
+      "field": "Time to Class",
+      "type": "nominal",
+      "axis": {
+        "title": "Time to Class (minutes)"
+      }
+    },
+    "y": {
+      "field": "count",
+      "aggregate": "mean",
+      "type": "quantitative",
+      "axis": {
+        "title": "Time from Home to University (minutes)"
+      }
+    },
+    "color": {
       "field": "Time to Class",
       "type": "quantitative",
       "scale": {
-        "domain": [256,0,-5],
-        "range": ["#2b8cbe","#E0E0E0","#F03B20"]
-      }
+        "domain": [
+          20,
+          0,
+          -5
+        ],
+        "range": [
+          "#2b8cbe",
+          "#E0E0E0",
+          "#F03B20"
+        ]
+      },
+      "legend":false
+    }
      }
-   }};
+   };
  
    var embedSpec = {
      mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
