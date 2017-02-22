@@ -50,6 +50,7 @@
           <ul class="nav navbar-nav">
             <li class="active"><a href="#">Home</a></li>
 	    <li><a href="quality">Data Quality</a></li>
+      <li><a href="about">About the Data</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -82,11 +83,46 @@
 	<p> You should also add information here, including some tables
 	and/or charts, telling the reader about the relationship
 	between time and location in your data.</p>
-      </div> <!-- /page-header -->
-    </div> <!-- /container -->
+
+ <center><div id="vis3"></div></center>
+      <center><div class="btn-group">
+         
+        <button type="button" class = "btn-space btn btn-info" id = "walk" onclick="walking()">
+        Walking
+        </button> 
+        <button type="button" class = "btn-space btn btn-info" id = "run" onclick="running()">
+        Running
+        </button> 
+        <button type="button" class = "btn-space btn btn-info" id = "still"  onclick="still()">
+          Still
+        </button> 
+        <button type="button" class = "btn-space btn btn-info" id = "vehic"  onclick="vehicle()">
+           Vehicle
+        </button>
+      </div></center>
+
+<p> You should also add information here, including some tables
+  and/or charts, telling the reader about the relationship
+  between time and location in your data.</p>
 
     <center><div id="vis"></div></center>
+
+    <p> You should also add information here, including some tables
+  and/or charts, telling the reader about the relationship
+  between time and location in your data.</p>
+
     <center><div id="vis2"></div></center>
+
+    <p> You should also add information here, including some tables
+  and/or charts, telling the reader about the relationship
+  between time and location in your data.</p>
+    
+
+
+
+
+      </div> <!-- /page-header -->
+    </div> <!-- /container -->
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
@@ -226,8 +262,184 @@
      // Callback receiving the View instance and parsed Vega spec
      // result.view is the View, which resides under the '#vis' element
    });
-  </script>
 
+    var vlSpec_walk = {
+     "data": {
+       "values": [
+    {% for row in queries[2].results %}
+        {"Day of Week": "{{row[0]}}", "Hour": "{{row[1]}}", "count": "{{row[2]}}"},
+    {% endfor %}
+    ]
+     },
+       "mark": "circle",
+  "encoding": {
+     "y": {
+      "field": "Day of Week",
+      "type": "nominal",
+      "sort": false
+    },
+    "x": {
+      "field": "Hour",
+      "type": "nominal",
+      "sort": false
+    },
+    "size": {
+      "field": "count",
+      "type": "quantitative",
+    }
+     }
+   };
+
+       var vlSpec_still = {
+     "data": {
+       "values": [
+    {% for row in queries[3].results %}
+        {"Day of Week": "{{row[0]}}", "Hour": "{{row[1]}}", "count": "{{row[2]}}"},
+    {% endfor %}
+    ]
+     },
+       "mark": "circle",
+  "encoding": {
+     "y": {
+      "field": "Day of Week",
+      "type": "nominal",
+      "sort": false
+    },
+    "x": {
+      "field": "Hour",
+      "type": "nominal",
+      "sort": false
+    },
+    "size": {
+      "field": "count",
+      "type": "quantitative",
+    }
+     }
+   };
+
+       var vlSpec_run = {
+     "data": {
+       "values": [
+    {% for row in queries[4].results %}
+        {"Day of Week": "{{row[0]}}", "Hour": "{{row[1]}}", "count": "{{row[2]}}"},
+    {% endfor %}
+    ]
+     },
+       "mark": "circle",
+  "encoding": {
+     "y": {
+      "field": "Day of Week",
+      "type": "nominal",
+      "sort": false
+    },
+    "x": {
+      "field": "Hour",
+      "type": "nominal",
+      "sort": false
+    },
+    "size": {
+      "field": "count",
+      "type": "quantitative",
+    }
+     }
+   };
+
+       var vlSpec_vehicle = {
+     "data": {
+       "values": [
+    {% for row in queries[5].results %}
+        {"Day of Week": "{{row[0]}}", "Hour": "{{row[1]}}", "count": "{{row[2]}}"},
+    {% endfor %}
+    ]
+     },
+       "mark": "circle",
+  "encoding": {
+     "y": {
+      "field": "Day of Week",
+      "type": "nominal",
+      "sort": false
+    },
+    "x": {
+      "field": "Hour",
+      "type": "nominal",
+      "sort": false
+    },
+    "size": {
+      "field": "count",
+      "type": "quantitative",
+    }
+     }
+   };
+
+  walking()
+
+function walking(){
+    var embedSpec = {
+     mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
+     spec: vlSpec_walk
+     // You can add more vega-embed configuration properties here.
+     // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
+   };
+ 
+   // Embed the visualization in the container with id `vis`
+   vg.embed("#vis3", embedSpec, function(error, result) {
+     // Callback receiving the View instance and parsed Vega spec
+     // result.view is the View, which resides under the '#vis' element
+   });
+   return false;
+}
+
+function running(){
+    var embedSpec = {
+     mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
+     spec: vlSpec_run
+     // You can add more vega-embed configuration properties here.
+     // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
+   };
+ 
+   // Embed the visualization in the container with id `vis`
+   vg.embed("#vis3", embedSpec, function(error, result) {
+     // Callback receiving the View instance and parsed Vega spec
+     // result.view is the View, which resides under the '#vis' element
+   });
+   return false;
+}
+
+function still(){
+    var embedSpec = {
+     mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
+     spec: vlSpec_still
+     // You can add more vega-embed configuration properties here.
+     // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
+   };
+ 
+   // Embed the visualization in the container with id `vis`
+   vg.embed("#vis3", embedSpec, function(error, result) {
+     // Callback receiving the View instance and parsed Vega spec
+     // result.view is the View, which resides under the '#vis' element
+   });
+   return false;
+}
+
+function vehicle(){
+    var embedSpec = {
+     mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
+     spec: vlSpec_vehicle
+     // You can add more vega-embed configuration properties here.
+     // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
+   };
+ 
+   // Embed the visualization in the container with id `vis`
+   vg.embed("#vis3", embedSpec, function(error, result) {
+     // Callback receiving the View instance and parsed Vega spec
+     // result.view is the View, which resides under the '#vis' element
+   });
+   return false;
+}
+
+
+
+</script>
 
 
 </html>

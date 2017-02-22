@@ -335,8 +335,23 @@ time_toUniv = time_toUniv[time_toUniv[:,1].argsort()]
 day_of_week = "DAYNAME(CONVERT_TZ(FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00'))"
 hour_of_day = "HOUR(CONVERT_TZ(FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00'))"
 activity_name = "'walking'"
-
-query = "SELECT {0} AS Weekday, {1}, COUNT(*) FROM {2} WHERE activity_name = {3} GROUP BY {0},{1}, activity_name;".format(day_of_week, hour_of_day, _ACTIVITY, activity_name)
+order_by_weekday = "FIELD(Weekday, 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY')"
+query = "SELECT {0} AS Weekday, {1} AS Hour, COUNT(*) FROM {2} WHERE activity_name = {3} GROUP BY {0},{1} ORDER BY {4}, Hour;".format(day_of_week, hour_of_day, _ACTIVITY, activity_name, order_by_weekday)
 walking_aggregated = make_query(cursor,query)
 
-print(activities)
+#Still
+activity_name = "'still'"
+query = "SELECT {0} AS Weekday, {1} AS Hour, COUNT(*) FROM {2} WHERE activity_name = {3} GROUP BY {0},{1} ORDER BY {4}, Hour;".format(day_of_week, hour_of_day, _ACTIVITY, activity_name, order_by_weekday)
+still_aggregated = make_query(cursor,query)
+
+#Running
+activity_name = "'running'"
+query = "SELECT {0} AS Weekday, {1} AS Hour, COUNT(*) FROM {2} WHERE activity_name = {3} GROUP BY {0},{1} ORDER BY {4}, Hour;".format(day_of_week, hour_of_day, _ACTIVITY, activity_name, order_by_weekday)
+running_aggregated = make_query(cursor,query)
+
+#Vehicle
+activity_name = "'in_vehicle'"
+query = "SELECT {0} AS Weekday, {1} AS Hour, COUNT(*) FROM {2} WHERE activity_name = {3} GROUP BY {0},{1} ORDER BY {4}, Hour;".format(day_of_week, hour_of_day, _ACTIVITY, activity_name, order_by_weekday)
+vehicle_aggregated = make_query(cursor,query)
+
+print(running_aggregated)

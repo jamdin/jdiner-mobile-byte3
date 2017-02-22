@@ -335,6 +335,8 @@ data_toUniv = np.column_stack((plot_toUniv, closest_temperatures))
 data_toUniv = data_toUniv[data_toUniv[:,1].argsort()] #Sort the data
 logging.info(data_toUniv)
 
+queries = [{'query':query, 'results':data_toUniv}]
+
 
 class_start_time = {'Monday': '13:30', 'Tuesday': '09:00', 'Wednesday': '13:30', 'Thursday': '09:00', 'Friday': '15:00'}
 time_class = [time_to_class(trip,class_start_time) for trip in plot_toUniv]
@@ -342,13 +344,50 @@ time_class = handle_outliers(time_class, 0)
 time_toUniv = np.column_stack((plot_toUniv, time_class))
 time_toUniv = time_toUniv[time_toUniv[:,1].argsort()]
 
+queries = queries + [{'query':query, 'results':time_toUniv}]
+
+###Aggregate Data
+
+#Walking
+day_of_week = "DAYNAME(CONVERT_TZ(FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00'))"
+hour_of_day = "HOUR(CONVERT_TZ(FROM_UNIXTIME(timestamp/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00'))"
+activity_name = "'walking'"
+order_by_weekday = "FIELD(Weekday, 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY')"
+query = "SELECT {0} AS Weekday, {1} AS Hour, COUNT(*) FROM {2} WHERE activity_name = {3} GROUP BY {0},{1} ORDER BY {4}, Hour;".format(day_of_week, hour_of_day, _ACTIVITY, activity_name, order_by_weekday)
+walking_aggregated = make_query(cursor,query)
+
+queries = queries + [{'query':query, 'results':walking_aggregated}]
+
+#Still
+activity_name = "'still'"
+query = "SELECT {0} AS Weekday, {1} AS Hour, COUNT(*) FROM {2} WHERE activity_name = {3} GROUP BY {0},{1} ORDER BY {4}, Hour;".format(day_of_week, hour_of_day, _ACTIVITY, activity_name, order_by_weekday)
+still_aggregated = make_query(cursor,query)
+
+queries = queries + [{'query':query, 'results':still_aggregated}]
+
+#Running
+activity_name = "'running'"
+query = "SELECT {0} AS Weekday, {1} AS Hour, COUNT(*) FROM {2} WHERE activity_name = {3} GROUP BY {0},{1} ORDER BY {4}, Hour;".format(day_of_week, hour_of_day, _ACTIVITY, activity_name, order_by_weekday)
+running_aggregated = make_query(cursor,query)
+
+queries = queries + [{'query':query, 'results':running_aggregated}]
+
+#Vehicle
+activity_name = "'in_vehicle'"
+query = "SELECT {0} AS Weekday, {1} AS Hour, COUNT(*) FROM {2} WHERE activity_name = {3} GROUP BY {0},{1} ORDER BY {4}, Hour;".format(day_of_week, hour_of_day, _ACTIVITY, activity_name, order_by_weekday)
+vehicle_aggregated = make_query(cursor,query)
+
+queries = queries + [{'query':query, 'results':vehicle_aggregated}]
+
+
+
 
 @app.route('/')
 def index():
     template = JINJA_ENVIRONMENT.get_template('templates/index.html')
 
-    queries = [{'query':query, 'results':data_toUniv}]
-    queries = queries + [{'query':query, 'results':time_toUniv}]
+    
+    
     context = {'queries':queries}
     return template.render(context)
 
