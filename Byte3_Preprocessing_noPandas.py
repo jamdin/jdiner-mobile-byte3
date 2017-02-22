@@ -355,3 +355,34 @@ query = "SELECT {0} AS Weekday, {1} AS Hour, COUNT(*) FROM {2} WHERE activity_na
 vehicle_aggregated = make_query(cursor,query)
 
 print(running_aggregated)
+
+
+days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+hours = range(24)
+day_hour = {}
+keys = []
+for d in days:
+    for h in hours:
+        day_hour[(d,h)]=0
+        keys.append((d,h))
+
+
+def add_missing_hours(aggregated_data, day_hour, keys):
+    complete_array = []
+    for a in aggregated_data:
+        index = (a[0],a[1])
+        count = a[2]
+        day_hour[index] = count
+    for k in keys:
+        value = day_hour[k]
+        row = (k[0],k[1],value)
+        complete_array.append(row)
+
+    return np.array(complete_array)
+
+
+
+
+
+
+

@@ -279,10 +279,31 @@ def time_to_class(trip, class_start_time):
     delta_minutes = (class_seconds - trip_seconds)/60
     return delta_minutes
 
+def add_missing_hours(aggregated_data, day_hour, keys):
+    complete_array = []
+    for a in aggregated_data:
+        index = (a[0],a[1])
+        count = a[2]
+        day_hour[index] = count
+    for k in keys:
+        value = day_hour[k]
+        row = (k[0],k[1],value)
+        complete_array.append(row)
+
+    return np.array(complete_array)
+
 #####################################################################################################
 #############                           END    FUNCTIONS                                #############
 #####################################################################################################
 
+days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+hours = range(24)
+day_hour = {}
+keys = []
+for d in days:
+    for h in hours:
+        day_hour[(d,h)]=0
+        keys.append((d,h))
 
 local_time_departure = "CONVERT_TZ(FROM_UNIXTIME(double_departure/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00')"
 local_time_arrival = "CONVERT_TZ(FROM_UNIXTIME(double_arrival/1000,'%Y-%m-%d %H:%i:%s'), '+00:00','-05:00')"
@@ -355,6 +376,7 @@ activity_name = "'walking'"
 order_by_weekday = "FIELD(Weekday, 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY')"
 query = "SELECT {0} AS Weekday, {1} AS Hour, COUNT(*) FROM {2} WHERE activity_name = {3} GROUP BY {0},{1} ORDER BY {4}, Hour;".format(day_of_week, hour_of_day, _ACTIVITY, activity_name, order_by_weekday)
 walking_aggregated = make_query(cursor,query)
+walking_aggregated = add_missing_hours(walking_aggregated, day_hour, keys)
 
 queries = queries + [{'query':query, 'results':walking_aggregated}]
 
@@ -362,6 +384,7 @@ queries = queries + [{'query':query, 'results':walking_aggregated}]
 activity_name = "'still'"
 query = "SELECT {0} AS Weekday, {1} AS Hour, COUNT(*) FROM {2} WHERE activity_name = {3} GROUP BY {0},{1} ORDER BY {4}, Hour;".format(day_of_week, hour_of_day, _ACTIVITY, activity_name, order_by_weekday)
 still_aggregated = make_query(cursor,query)
+still_aggregated = add_missing_hours(still_aggregated, day_hour, keys)
 
 queries = queries + [{'query':query, 'results':still_aggregated}]
 
@@ -369,6 +392,7 @@ queries = queries + [{'query':query, 'results':still_aggregated}]
 activity_name = "'running'"
 query = "SELECT {0} AS Weekday, {1} AS Hour, COUNT(*) FROM {2} WHERE activity_name = {3} GROUP BY {0},{1} ORDER BY {4}, Hour;".format(day_of_week, hour_of_day, _ACTIVITY, activity_name, order_by_weekday)
 running_aggregated = make_query(cursor,query)
+running_aggregated = add_missing_hours(running_aggregated, day_hour, keys)
 
 queries = queries + [{'query':query, 'results':running_aggregated}]
 
@@ -376,6 +400,7 @@ queries = queries + [{'query':query, 'results':running_aggregated}]
 activity_name = "'in_vehicle'"
 query = "SELECT {0} AS Weekday, {1} AS Hour, COUNT(*) FROM {2} WHERE activity_name = {3} GROUP BY {0},{1} ORDER BY {4}, Hour;".format(day_of_week, hour_of_day, _ACTIVITY, activity_name, order_by_weekday)
 vehicle_aggregated = make_query(cursor,query)
+vehicle_aggregated = add_missing_hours(vehicle_aggregated, day_hour, keys)
 
 queries = queries + [{'query':query, 'results':vehicle_aggregated}]
 
