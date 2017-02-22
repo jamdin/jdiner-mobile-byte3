@@ -9,7 +9,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <link rel="icon" href="favicon.ico">
-    <title>Mobile Byte Tutorial</title>
+    <title>Mobile Byte - jdiner</title>
 
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -48,9 +48,9 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
-	    <li><a href="quality">Data Quality</a></li>
-      <li><a href="about">About the Data</a></li>
+            <li><a href="/">Home</a></li>
+            <li  class="active"><a href="about">About This Data Set</a></li>
+      <li><a href="quality">Data Quality</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -60,29 +60,22 @@
 
       <!-- Main jumbotron for a primary marketing message or call to action -->
       <div class="jumbotron">
-	<h1>Data Pipeline Project Mobile Byte Example</h1>
-        <p>This is the Mobile Byte of the Data Pipeline class.</p>
+	<h1>Daily Routine Data Analysis</h1>
+        <p>In this page, I will perform a thorough analysis of my daily routine with data obtained
+        using my personal mobile device. The analysis will focus on 3 points:
+        <ul>- Activity analysis by weekday and hour</ul>
+        <ul>- Does weather affect my commute time?</ul>
+        <ul>- Does the time left until class affect my commute time?</ul></p>
       </div>
 
-   <h2>Query Results</h2>
-   <ul>
-   {% for item in queries %}
-   <li>Query: {{item.query}}<br>
-       {% for row in item.results %}
-          {{row}}<br>
-       {% endfor %}
-   </li>
-   {% endfor %}
+   <h2>Activity analysis by weekday and hour</h2>
 
 
    <div class="page-header">
-	<p> You should add information here, including some tables
-	and/or charts, telling the reader about the relationship
-	  between time and activity in your data.</p>
+	<p> When I first started this byte, I wanted to get an overview of how much time I spend every day
+  performing various activities. This way, I'm able to get feedback on my daily activity and make
+  corresponding changes to live a healthier life.</p>
 
-	<p> You should also add information here, including some tables
-	and/or charts, telling the reader about the relationship
-	between time and location in your data.</p>
 
  <center><div id="vis3"></div></center>
       <center><div class="btn-group">
@@ -101,21 +94,65 @@
         </button>
       </div></center>
 
-<p> You should also add information here, including some tables
-  and/or charts, telling the reader about the relationship
-  between time and location in your data.</p>
+  <p> In the interactive graph above, we can see how much time I spent walking, running, standing still, and being on a vehicle by time of day and day of the week. This data is pulled directly to the database, so it is up to date.</p>
+
+  <h3>Walking</h3>
+
+
+<p> We can see in the data that, as expected:
+<ul>- I rarely walk before 8:00am on the weekdays while sometimes I walk on Saturday and Sunday mornings after going out.</ul>
+<ul>- We see that the time frame where I walk the most is from 9:00am to 9:00pm, which is very consistent with the time I'm active.</ul>
+<ul>- On Fridays nights I walk more than any other day of the week, which is an expected result as I usually go out to eat.</ul></p>
+
+  <h3>Running</h3>
+
+
+<p> The data from running does not seem as accurate as the one for walking. There could be two possible reasons for this:</p>
+<ul>- When I walk fast, the system records it as running, or</ul>
+<ul>- The sensor is not well calibrated and we are receiving noisy data.</ul>
+
+<p>Either way, because I have the knowledge of how often I run, I can identify that the data is not correct. This could be a problem if I'm analyzing the data of another person, as I would believe that they run more often than they do.</p>
+
+  <h3>Still</h3>
+
+<p> There are some really interesting insights from this dataset. To make sense of this data, it is useful to point out my weekly schedule:</p>
+<ul>- Mondays: 1:30pm-3:00pm</ul>
+<ul>- Tuesdays: 9:00am-9:00pm</ul>
+<ul>- Wednesdays: 1:30pm-3:00pm</ul>
+<ul>- Thursdays: 9:00am-6:00pm</ul>
+<ul>- Fridays: 3:00pm-6:00pm</ul>
+
+<p>We can see form the data that I'm mostly still during these EXACT intervals. This makes me believe that the data is correct for the still measurement and it would be useful further analysis.</p>
+
+  <h3>In Vehicle</h3>
+
+
+<p> Similar to the running data, the datapoints doesn't make much sense, as it appears than I'm in a vehicle at almost the same time as I'm standing still. This leads me to believe that the system is successful at recording data when the speed is less than a threshold (walking, still), while it fails at higher speeds (running, in-vehicle).</p>
+
+   <h2>Does the weather affect my commute time?</h2>
+
+
+   <p>I like to optimize processes and understand the conditions that may affect the outcome. I was curious if the weather influenced the time that it takes me to get from my home to the university, as I walk to campus almost every day. The basis for this hypothesis is that I thought that maybe I walk faster on colder days to stay warm.
+
+   The following graph shows this relationship. The bars correspond to the time in minutes that took me to get to the university, and the points represent the temperature reported on that date. The x axis corresponds to the date. The weather information was obtained using the openweather API and integrated to the AWARE platform.</p>
 
     <center><div id="vis"></div></center>
 
-    <p> You should also add information here, including some tables
-  and/or charts, telling the reader about the relationship
-  between time and location in your data.</p>
+    <p>We can see that there is a slight correlation between time and weather, as both have a positive slope. This difference is barely noticeable and, because we have a very small amount of data points, we can't confirm that this is statistically significant and therefore that weather affects (or not) my total commute time.</p>
+
+<h2>Does the time until class affect my commute time?</h2>
+
+
+   <p>I usually work better under pressure, and commute is no different. Sometimes I get relaxed if I leave my house early and enjoy the walk to campus, while sometimes I'm late and have to speed up to get to class. I want to test if there is indeed a difference in commute time based on the time that I have left until my class starts.
+
+  The following graph shows this relationship. The y-axis corresponds to the time in minutes that took me to get to the university, and the x-axis represents the difference between my departure time and the time my class starts. The color is proportional to the time until class, and helps visualize this measurement.
+   </p>
 
     <center><div id="vis2"></div></center>
 
-    <p> You should also add information here, including some tables
-  and/or charts, telling the reader about the relationship
-  between time and location in your data.</p>
+    <p> The first thing that stands out from this graph is the red bar on the left. It is red because I left my house after my class started. The reason it is so small is that I took the bus that day. Besides that, we can see that there is clearly a trend where the time left until class is proportional to the time it takes me to get to campus from my house.
+
+    The difference appears to be statistically significant, and confirms my hypothesis that it takes me longer to get to campus if I have more time until my class starts.</p>
     
 
 
