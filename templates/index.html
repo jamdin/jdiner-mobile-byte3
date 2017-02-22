@@ -48,8 +48,8 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li><a href="/">Home</a></li>
-            <li  class="active"><a href="about">About This Data Set</a></li>
+            <li  class="active"><a href="/">Home</a></li>
+            <li><a href="about">About This Data Set</a></li>
       <li><a href="quality">Data Quality</a></li>
           </ul>
         </div><!--/.nav-collapse -->
@@ -63,9 +63,9 @@
 	<h1>Daily Routine Data Analysis</h1>
         <p>In this page, I will perform a thorough analysis of my daily routine with data obtained
         using my personal mobile device. The analysis will focus on 3 points:
-        <ul>- Activity analysis by weekday and hour</ul>
-        <ul>- Does weather affect my commute time?</ul>
-        <ul>- Does the time left until class affect my commute time?</ul></p>
+        <ul><li> Activity analysis by weekday and hour</li>
+        <li> Does weather affect my commute time?</li>
+        <li> Does the time left until class affect my commute time?</li></ul></p>
       </div>
 
    <h2>Activity analysis by weekday and hour</h2>
@@ -100,27 +100,27 @@
 
 
 <p> We can see in the data that, as expected:
-<ul>- I rarely walk before 8:00am on the weekdays while sometimes I walk on Saturday and Sunday mornings after going out.</ul>
-<ul>- We see that the time frame where I walk the most is from 9:00am to 9:00pm, which is very consistent with the time I'm active.</ul>
-<ul>- On Fridays nights I walk more than any other day of the week, which is an expected result as I usually go out to eat.</ul></p>
+<ul><li> I rarely walk before 8:00am on the weekdays while sometimes I walk on Saturday and Sunday mornings after going out.</li>
+<li>We see that the time frame where I walk the most is from 9:00am to 9:00pm, which is very consistent with the time I'm active.</li>
+<li>On Fridays nights I walk more than any other day of the week, which is an expected result as I usually go out to eat.</li></ul></p>
 
   <h3>Running</h3>
 
 
 <p> The data from running does not seem as accurate as the one for walking. There could be two possible reasons for this:</p>
-<ul>- When I walk fast, the system records it as running, or</ul>
-<ul>- The sensor is not well calibrated and we are receiving noisy data.</ul>
+<ul><li>When I walk fast, the system records it as running, or</li>
+<li>The sensor is not well calibrated and we are receiving noisy data.</li></ul>
 
 <p>Either way, because I have the knowledge of how often I run, I can identify that the data is not correct. This could be a problem if I'm analyzing the data of another person, as I would believe that they run more often than they do.</p>
 
   <h3>Still</h3>
 
 <p> There are some really interesting insights from this dataset. To make sense of this data, it is useful to point out my weekly schedule:</p>
-<ul>- Mondays: 1:30pm-3:00pm</ul>
-<ul>- Tuesdays: 9:00am-9:00pm</ul>
-<ul>- Wednesdays: 1:30pm-3:00pm</ul>
-<ul>- Thursdays: 9:00am-6:00pm</ul>
-<ul>- Fridays: 3:00pm-6:00pm</ul>
+<ul><li> Mondays: 1:30pm-3:00pm</li>
+<li>Tuesdays: 9:00am-9:00pm</li>
+<li>Wednesdays: 1:30pm-3:00pm</li>
+<li>Thursdays: 9:00am-6:00pm</li>
+<li>Fridays: 3:00pm-6:00pm</li></ul>
 
 <p>We can see form the data that I'm mostly still during these EXACT intervals. This makes me believe that the data is correct for the still measurement and it would be useful further analysis.</p>
 
@@ -134,7 +134,7 @@
 
    <p>I like to optimize processes and understand the conditions that may affect the outcome. I was curious if the weather influenced the time that it takes me to get from my home to the university, as I walk to campus almost every day. The basis for this hypothesis is that I thought that maybe I walk faster on colder days to stay warm.
 
-   The following graph shows this relationship. The bars correspond to the time in minutes that took me to get to the university, and the points represent the temperature reported on that date. The x axis corresponds to the date. The weather information was obtained using the openweather API and integrated to the AWARE platform.</p>
+   The following graph shows this relationship. The bars correspond to the time in minutes that took me to get to the university, and the points represent the temperature reported on that date in Fahrenheit. The x axis corresponds to the date. The weather information was obtained using the openweather API and integrated to the AWARE platform.</p>
 
     <center><div id="vis"></div></center>
 
