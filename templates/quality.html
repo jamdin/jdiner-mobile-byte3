@@ -16,6 +16,21 @@
     <link href="css/bootstrap-theme.min.css" rel="stylesheet">
     <!-- Custom styles for this template -->
     <link href="css/theme.css" rel="stylesheet">
+
+
+    <!-- Vega-lite visualization libraries -->
+    <script src="//d3js.org/d3.v3.min.js"></script>
+    <script src="//vega.github.io/vega/vega.js"></script>
+    <script src="//vega.github.io/vega-lite/vega-lite.js"></script>
+    <script src="//vega.github.io/vega-editor/vendor/vega-embed.js" charset="utf-8"></script>
+    
+    <style media="screen">
+   /* Add space between vega-embed links  */
+    .vega-actions a {
+      margin-right: 5px;
+    }
+    </style>
+
   </head>
 
   <body role="document">
@@ -48,45 +63,105 @@
 	<h1>Quality: About This Data Set</h1>
       </div>
 
-    
+    <p>At the beginning of the assignemnt, I thought about collecting as much information as possible, as it is better to have more data than I need, than to have not enough data to perform the analysis.
+
+    Out of the 7 tables described <a href="about">here</a>, I ended up using only Locations_Visit, Plugin_gogle_activity_recognition, and the Plugin_OpenWeather.
+
+    Both Acceleration tables did not provide information that I could extract to analyze my behaviour, so I ended up discarting them.
+
+    The Plugin_ios_activity_recognition table provides the same information than the Plugin_gogle_activity_recognition, so I ended up using the one that provided the easiest format to perform the analysis.
+
+    The Locations_Visit provided the same information as the Locations table, in addition to the full street address location of the coordinates. Because of this, I ended up choosing the Locations_Visit to perform the analysis.
+
+    The following analysis is limited to these 3 tables.</p>
+
       <div class="page-header">
 	<h2>Is the data complete?</h2>
-	<p>The data is complete for answering the questions proposed in this byte. It has the information from all the characters mentioned in the book along with their allegiance, gender, introduction and death in the book.
+	<p>The data is not complete. This could be do to either the phone running out of battery and not recording activities, or to the refresh rate of the sensor. This can be seen specifically in each of the graphs generated:
 
-  If we wanted to answer information about the most important characters in the book, we would need the text and find the frequency of words to create an informal network of the series. In other words, the granularity is not the best for performing that kind of analysis, but it serves the purpose of this byte.</p>
+  <h3>Activity analysis by weekday and hour</h3>
+  <center><div id="vis3"></div></center>
+      <center><div class="btn-group">
+         
+        <button type="button" class = "btn-space btn btn-info" id = "walk" onclick="walking()">
+        Walking
+        </button> 
+        <button type="button" class = "btn-space btn btn-info" id = "run" onclick="running()">
+        Running
+        </button> 
+        <button type="button" class = "btn-space btn btn-info" id = "still"  onclick="still()">
+          Still
+        </button> 
+        <button type="button" class = "btn-space btn btn-info" id = "vehic"  onclick="vehicle()">
+           Vehicle
+        </button>
+      </div></center>
+
+      We can see that we only have records for the hours where an event is recorded. For this reason, I had to create a function that fills in all the missing Date/Hours combinations with a value of 0.
+
+      The result is that all graphs cover all 24 hours per day and all 7 days per week.
+
+      </p>
+
+      <h3>Weather and Time to class</h3>
+
+      <p>To calculate the time it took me to get to campus from my home, I bundled locations that are near each other together and used the location_visit table to calculate the difference between departure and arrival.
+
+      Departure and arrival were reported on different rows, so I created a function to match the records and calculate the total trip time. In this step, I noticed that some values were missing because the trip time was extremely high.
+
+      To solve this issue, I created a function that replaced the outliers with the median of the sample population.
+
+      The weather data was updated every hour, so I didn't have the exact temperature of when a trip happened. To solve this, I created a function that found the temperature record that was closest to the trip time and, if the time difference was greater than a threshold, it would create a window of the previous 2 and following 2 and proceed to impute the mean as the temperature.
+
+      After performing these operations, the completeness of the data was no longer a problem and I could proceed with my analysis.
+      </p>
       </div>
       
       <div class="page-header">
 	<h2>Is the data coherent?</h2>
-	<p>There are several things I checked to confirm that the data is coherent:
-  <ul> 
-      <li> The introduction book and chapter was before the death book and chapter.</li>
-      <li> The death year makes sense compared to the book of death.</li>
-  </ul>
-      After looking at this, we confirmed that the data is coherent and we can use it for analysis.
+	<p>To check that the data was coherent, I analyzed each table separately:</p>
 
-  </p>
+  <h3>Locations_Visit</h3>
+  <p>To check if the data was coherent, I generated a summary of all the locations visited and saw that none were outside the norm. Also, that the time of visit to each location made sense.</p>
+
+    <h3>Plugin_gogle_activity_recognition</h3>
+  <p>To check if the data was coherent, I generated the punchcard summary that is displayed in the correctness page and confirmed that all the activities and times made sense.</p>
+
+  <h3>Plugin_OpenWeather</h3>
+  <p>To check if the data was coherent, I generated a summary of the weather data and confirmed that no there were no outliers in the data; and that all temperatures reported were in the range they should be for this time of year.</p>
+
+
+  <p>After analyzing this data, I concluded that the data collected was coherent and that I could use it for analysis.</p>
       </div>
 
       <div class="page-header">
 	<h2>Is the data correct?</h2>
-	<p>There are several things I looked at to confirm that the data was correct:
-  <ul>
-      <li> The last names of the characters corresponded to their reported allegiance.</li>
-      <li> The introduction and death of the principal characters are where they're supposed to.</li>
-      <li> Randomly selected some characters and confirmed that the gender was correct.</li>
+	<p>The data is correct. We can verify the correctness of the data by looking at key points in each of the graphs:
+
+    <h3>Activity analysis by weekday and hour</h3>
+    <p>
+      <ul>
+        <li>The activities per day of week matched the activities I do on a regular day.</li>
+        <li>The time of the activities is consistent with what I expect to do at that time on each day.</li>
       </ul>
+    </p>
 
-      After this, I could confirm that the data appears to be sound and that it could be used for the analysis.
-
+    <h3>Does weather/time to class affect commute time?</h3>
+    <p>
+      <ul>
+        <li>I manually checked the temperatures of some days online and confirmed that the reported temperature was indeed the correct temperature.</li>
+        <li>The departure address and the arrival address are correct, and reflect my home address and CMU campus.</li>
+        <li>The departure time and arrival time seem correct based on my memory of the time I left home and arrived at school for those specific dates.</li>
+      </ul>
+    </p>
+      
+      After performing this analysis, I could confirm that the data is indeed correct and I could use it for analysis.
       </p>
       </div>
 
        <div class="page-header">
   <h2>Is the data accountable?</h2>
-    <p> The data has been reviewed by a community of Game of Thrones fans and was curated to represent accountable information about the series.
-
-    Because several people with knowledge of the series have corrected and verified this information, it can be said that the data is accountable.
+    <p> The data was created using my personal phone and connected via the AWARE Framework to the Google Cloud SQL. We can trace every step of data generation and storage and, because only the AWARE platform is modifying the data, we can conclude that the data is accountable.
   </p>
       </div>
 
@@ -100,4 +175,186 @@
     <script src="js/bootstrap.min.js"></script>
     <script src="js/docs.min.js"></script>
   </body>
+
+
+
+
+<script>
+  
+  var vlSpec_walk = {
+     "data": {
+       "values": [
+    {% for row in queries[0].results %}
+        {"Day of Week": "{{row[0]}}", "Hour": "{{row[1]}}", "count": "{{row[2]}}"},
+    {% endfor %}
+    ]
+     },
+       "mark": "circle",
+  "encoding": {
+     "y": {
+      "field": "Day of Week",
+      "type": "nominal",
+      "sort": false
+    },
+    "x": {
+      "field": "Hour",
+      "type": "nominal",
+      "sort": false
+    },
+    "size": {
+      "field": "count",
+      "type": "quantitative",
+    }
+     }
+   };
+
+       var vlSpec_still = {
+     "data": {
+       "values": [
+    {% for row in queries[1].results %}
+        {"Day of Week": "{{row[0]}}", "Hour": "{{row[1]}}", "count": "{{row[2]}}"},
+    {% endfor %}
+    ]
+     },
+       "mark": "circle",
+  "encoding": {
+     "y": {
+      "field": "Day of Week",
+      "type": "nominal",
+      "sort": false
+    },
+    "x": {
+      "field": "Hour",
+      "type": "nominal",
+      "sort": false
+    },
+    "size": {
+      "field": "count",
+      "type": "quantitative",
+    }
+     }
+   };
+
+       var vlSpec_run = {
+     "data": {
+       "values": [
+    {% for row in queries[2].results %}
+        {"Day of Week": "{{row[0]}}", "Hour": "{{row[1]}}", "count": "{{row[2]}}"},
+    {% endfor %}
+    ]
+     },
+       "mark": "circle",
+  "encoding": {
+     "y": {
+      "field": "Day of Week",
+      "type": "nominal",
+      "sort": false
+    },
+    "x": {
+      "field": "Hour",
+      "type": "nominal",
+      "sort": false
+    },
+    "size": {
+      "field": "count",
+      "type": "quantitative",
+    }
+     }
+   };
+
+       var vlSpec_vehicle = {
+     "data": {
+       "values": [
+    {% for row in queries[3].results %}
+        {"Day of Week": "{{row[0]}}", "Hour": "{{row[1]}}", "count": "{{row[2]}}"},
+    {% endfor %}
+    ]
+     },
+       "mark": "circle",
+  "encoding": {
+     "y": {
+      "field": "Day of Week",
+      "type": "nominal",
+      "sort": false
+    },
+    "x": {
+      "field": "Hour",
+      "type": "nominal",
+      "sort": false
+    },
+    "size": {
+      "field": "count",
+      "type": "quantitative",
+    }
+     }
+   };
+
+  walking()
+
+function walking(){
+    var embedSpec = {
+     mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
+     spec: vlSpec_walk
+     // You can add more vega-embed configuration properties here.
+     // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
+   };
+ 
+   // Embed the visualization in the container with id `vis`
+   vg.embed("#vis3", embedSpec, function(error, result) {
+     // Callback receiving the View instance and parsed Vega spec
+     // result.view is the View, which resides under the '#vis' element
+   });
+   return false;
+}
+
+function running(){
+    var embedSpec = {
+     mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
+     spec: vlSpec_run
+     // You can add more vega-embed configuration properties here.
+     // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
+   };
+ 
+   // Embed the visualization in the container with id `vis`
+   vg.embed("#vis3", embedSpec, function(error, result) {
+     // Callback receiving the View instance and parsed Vega spec
+     // result.view is the View, which resides under the '#vis' element
+   });
+   return false;
+}
+
+function still(){
+    var embedSpec = {
+     mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
+     spec: vlSpec_still
+     // You can add more vega-embed configuration properties here.
+     // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
+   };
+ 
+   // Embed the visualization in the container with id `vis`
+   vg.embed("#vis3", embedSpec, function(error, result) {
+     // Callback receiving the View instance and parsed Vega spec
+     // result.view is the View, which resides under the '#vis' element
+   });
+   return false;
+}
+
+function vehicle(){
+    var embedSpec = {
+     mode: "vega-lite",  // Instruct Vega-Embed to use the Vega-Lite compiler
+     spec: vlSpec_vehicle
+     // You can add more vega-embed configuration properties here.
+     // See https://github.com/vega/vega/wiki/Embed-Vega-Web-Components#configuration-propeties for more information.
+   };
+ 
+   // Embed the visualization in the container with id `vis`
+   vg.embed("#vis3", embedSpec, function(error, result) {
+     // Callback receiving the View instance and parsed Vega spec
+     // result.view is the View, which resides under the '#vis' element
+   });
+   return false;
+}
+
+</script>
+
 </html>
